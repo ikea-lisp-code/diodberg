@@ -11,9 +11,12 @@ from scipy.spatial import cKDTree
 from collections import MutableMapping        
 
 class Color(object):
-    """ RGB color representation. Saturates for invalid values."""
+    """ RGB color representation. Saturates for invalid values.
+    """
+
     __rgb_lower = 0
     __rgb_upper = 255
+
     def __init__(self, r = 0, g = 0, b = 0, alpha = 0):
         self.red = r
         self.green = g
@@ -24,12 +27,16 @@ class Color(object):
     green = property(__get_g, __set_g, __del_g, "Green channel")
     blue = property(__get_b, __set_b, __del_b, "Blue channel")
     alpha = property(__get_a, __set_a, __del_a, "Alpha channel")
+    
+    @property
+    def raw(self):
+        return (self.red, self.green, self.blue)
 
     def set_rgb(self, red, green, blue, alpha = 0):
         self.red = red
         self.red = green
         self.blue = blue
-        self.alpha = alpha
+        self.alpha = alpha    
     
     def __get_r(self): return self.red
     def __set_r(self, val):
@@ -69,7 +76,7 @@ class Color(object):
         return formatted % val    
 
 
-dmx# TODO: (optional) Range checking?
+# TODO: (optional) Range checking?
 class Location(object):
     def __init__(self, x = 0, y = 0):
         self.x = x
@@ -79,7 +86,7 @@ class Location(object):
     y = property(__get_y, __set_y, __del_y, "Vertical y.")
 
     @property
-    def location(self):
+    def raw(self):
         return (self.x, self.y)
 
     def set_loc(self, x, y):
@@ -100,7 +107,8 @@ class Location(object):
 
 
 class DMXAddress(object):
-    """Defines the DMX address for a live pixel."""
+    """Defines the DMX address for a live pixel.
+    """
     __invalid_address = -1
     __dmx_lower = 0
     __dmx_upper = 512
@@ -129,8 +137,9 @@ class DMXAddress(object):
     
 
 class Pixel(object):
-    """A pixel has a color and location. If it is live, it must have a valid
-    DMX address."""
+    """ A pixel has a color and location. If it is live, it must have a valid
+    DMX address.
+    """
     
     def __init__(self, color = Color(), location = Location(), address = DMXAddress(), live = False):
         self.color = color
@@ -165,17 +174,24 @@ class Pixel(object):
 
 
 class Panel(MutableMapping):
+    """ Panel represents a collection of pixels, representing a climbing wall.
+    It's structured as a dictionary with fast k-nearest neighbor access of 
+    pixels.
+    """ 
+    
     def __init__(self, pixels):
         self.__pixels = dict(pixels)
         self.__tree = cKDTree(self.locations)
 
     @property
     def locations(self):
-        """ Returns an array of (x, y) tuple locations for pixels."""
+        """ Returns an array of (x, y) tuple locations for pixels.
+        """
         return self.__pixels.keys()
 
     def get_nearest(self, location, num_pixels):
-        """ Returns the num_pixels closests pixels to a location. """
+        """ Returns the num_pixels closests pixels to a location. 
+        """
         return self.__tree.query_ball_point(location, num_pixels)
 
     def __contains__(self, key):
@@ -186,7 +202,7 @@ class Panel(MutableMapping):
 
     def __setitem__(self, key, value):
         if key not in self.__pixels:
-            self.__tree = cKDTree(self.locations.append(key))
+            self.__tree = cKDTree(self.locations + [key])
         self.__pixels[key] = value
 
     def __delitem__(self, key):

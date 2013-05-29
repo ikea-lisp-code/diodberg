@@ -4,15 +4,22 @@ diodberg is a new experimental climbing wall from 'ikea-lisp-code.
 
 Directory contents:
 * core
+
   Basic types, runner, and rendering objects.
+
 * docs
 * firmware
+
   Device firmware for the climbing holds
+
 * schematics
 * user_plugins
+
   User applications for running visualizations
+
 * util
-  Misc.: Color manipulation and math utilities
+
+  Misc.: random utilities
 
 # Package requirements
 * Python 2.7 (?)

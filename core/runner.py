@@ -17,7 +17,7 @@ class Runner(threading.Thread):
     def __init__(self, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
         self.__lock = thread.allocate_lock()
-        self.daemon = True
+        self.daemon = True 
 
     panel = property(__get_panel, __set_panel, __del_panel, "Panel.")
     name = property(__get_name, __set_name, __del_name, "Name.")
