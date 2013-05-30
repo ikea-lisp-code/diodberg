@@ -2,35 +2,39 @@ import time
 import threading
 
 class Runner(threading.Thread):
-    """ """
-
-    __framecount = 0
+    """ A Runner is the primary execution thread for a Panel visualization. An
+    abstract class, it takes a Panel of pixels and a Renderer and executes 
+    a rendering action for that panel.
+    """ 
+    
     __default_sleep = 30
     
-    def __init__(self, *args, **kwargs):
-        threading.Thread.__init__(self, *args, **kwargs)
-        self.__lock = thread.allocate_lock()
-        self.daemon = True 
+    def __init__(self, panel, name, renderer):
+        super(Runner, self).__init__()
+        self.__lock = threading.Lock()
+        self.daemon = True
+        self.running = False
+        self.__panel = panel
+        self.__name = name
+        self.__renderer = renderer
+        self.__framecount = 0
+        self.__last_tick = 0
 
-    panel = property(__get_panel, __set_panel, __del_panel, "Panel.")
-    name = property(__get_name, __set_name, __del_name, "Name.")
-    renderer = property(__get_renderer, __set_renderer, __del_renderer, "Renderer.")
-
-    def init(self, panel):
-        """Initializes any environmental parameters based on the panel info.
-        Defined by whatever subclasses Runner.""" 
+    def init(self):
+        """ Initializes any environmental parameters based on the panel info.
+        Defined by whatever subclasses Runner.
+        """ 
         pass
 
     def fill(self):
-        """Iterate over the panel and change the pixel RGB values.
-        Defined by whatever subclasses runner."""
+        """ Iterate over the panel and change the pixel RGB values.
+        Defined by whatever subclasses runner.
+        """
         pass
 
     def run(self):
-        self.running = True
-        self.__framecount = 0
-        self.__last_tick = 0
-        self.init(self.__panel)
+        self.running = True        
+        self.init()
         while self.running:
             if not self.__framecount % 30:
                 tick = time.time()
@@ -39,28 +43,44 @@ class Runner(threading.Thread):
                 self.__last_tick = tick
             self.__framecount += 1
             self.__lock.acquire()
-            self.fill(self.__panel)
-            self.__renderer.render(self.__panel)
+            self.fill()
+            self.__renderer.render(self.panel)
             self.__lock.release()
-            time.sleep(__default_sleep)
+            time.sleep(Runner.__default_sleep)
         
-    def __get_panel(self): return self.panel
-    def __set_panel(self, val): self.panel = val
-    def __del_panel(self): del self.panel
+    def __get_panel(self): 
+        return self.__panel
+    def __set_panel(self, val): 
+        self.__panel = val
+    def __del_panel(self): 
+        del self.__panel
 
-    def __get_name(self): return self.name
-    def __set_name(self, val): self.name = val
-    def __del_name(self): del self.name
+    def __get_name(self): 
+        return self.__name
+    def __set_name(self, val): 
+        self.__name = val
+    def __del_name(self): 
+        del self.__name
 
-    def __get_renderer(self): return self.renderer
-    def __set_renderer(self, val): self.renderer = val
-    def __del_renderer(self): del self.renderer
+    def __get_renderer(self): 
+        return self.__renderer
+    def __set_renderer(self, val): 
+        self.__renderer = val
+    def __del_renderer(self): 
+        del self.__renderer
+
+    panel = property(__get_panel, __set_panel, __del_panel, "Panel.")
+    name = property(__get_name, __set_name, __del_name, "Name of visualization.")
+    renderer = property(__get_renderer, __set_renderer, __del_renderer, "Renderer.")
 
     def __repr__(self):
-        pass
+        "Runner"
 
 #TODO: Extend to multiple threads
 class Controller(object):
+    """ Controller initializes a set of Runner threads and shares execution between
+    them. 
+    """
     def __init__(self, panel, renderer):
         self.__panel = panel
         self.__renderer = renderer

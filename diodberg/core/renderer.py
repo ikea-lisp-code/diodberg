@@ -1,12 +1,15 @@
 import array
 import pygame
-from pygame.locals import *
+import sys
 from diodberg.core.types import Color
-from ola.ClientWrapper import ClientWrapper
+try:
+    from ola.ClientWrapper import ClientWrapper
+except ImportError as err: 
+    sys.stderr.write("Error: failed to import ola module ({})".format(err))
 
 
 class Renderer(object):
-    """Renderer is an abstract base class for objects that actually render pixels
+    """ Renderer is an abstract base class for objects that actually render pixels
     that have been filled in.
     """ 
 
@@ -14,6 +17,9 @@ class Renderer(object):
         pass
     
     def render(self, panel):
+        """Perform a rendering action for an actual Panel. Subclass this method for a
+        new renderer.
+        """
         pass
 
     def __repr__(self):
@@ -29,13 +35,14 @@ class DMXRenderer(Renderer):
     __default_channel_val = 0
     
     def __init__(self, universes = 1):
+        super(DMXRenderer, self).__init__()
         # Initialize a shared storage buffer
-        default_buffer = [__default_channel_val]*__dmx_buffer_size
+        default_buffer = [DMXRenderer.__default_channel_val]*DMXRenderer.__dmx_buffer_size
         self.__buffer = {}
         for i in xrange(universes):
             self.__buffer[i] = array.array('B', default_buffer)
         self.__wrapper = ClientWrapper()
-        self.__client = wrapper.Client()
+        self.__client = self.__wrapper.Client()
 
     def render(self, panel):
         # Fill in the buffer.
@@ -46,53 +53,57 @@ class DMXRenderer(Renderer):
                 self.__buffer[universe][address] = pixel.color.red
                 self.__buffer[universe][address + 1] = pixel.color.green
                 self.__buffer[universe][address + 2] = pixel.color.blue
+        # Send the buffer over DMX.
         for universe, buf in self.__buffer.iteritems():
-            self.__client.SendDmx(universe, buf, __dmx_sent)
+            self.__client.SendDmx(universe, buf, self.__dmx_sent)
             self.__wrapper.Run()
         
-    def __dmx_sent(state):
+    def __dmx_sent(self):
         self.__wrapper.Stop()
 
     def __repr__(self):
         return "DMXRenderer"
 
 
-class PyGameRenderer(object):
-    """PyGameRenderer provides a renderer interface to a PyGame simulation client.
+class PyGameRenderer(Renderer):
+    """ PyGameRenderer provides a renderer interface to a PyGame simulation client.
     Active (inactive) pixels are rendered as circles (squares).
     """
 
     __default_x_size = 640
     __default_y_size = 480
     __default_size = (__default_x_size, __default_y_size)
-    __default_scale = 1
-    __black = Color(0, 0, 0).raw
-    __font = pygame.font.SysFont("monospace", 10)
+    __default_scale = 4
+    __black = Color(0, 0, 0).raw    
     __font_color = Color(255, 255, 0).raw
 
     def __init__(self, 
-                 size = (__default_x_size, __default_y_size), 
-                 scale = __default_scale, 
+                 size = (640, 480),
+                 scale = 4, 
                  debug = False):
+        super(PyGameRenderer, self).__init__()
         pygame.init()
-        self.__screen = pygame.display.set_mode(__default_size)
-        self.__screen.fill(__black)
+        self.__screen = pygame.display.set_mode(size)
+        self.__screen.fill(PyGameRenderer.__black)
+        self.__font = pygame.font.SysFont("monospace", 10)
         self.__scale = scale
         self.__debug = debug
 
     def render(self, panel):
-        self.__screen.fill(__black)
-        for loc, pixel in panel:            
-            color = pixel.color.raw
+        self.__screen.fill(PyGameRenderer.__black)
+        for loc, pixel in panel.items():
             if pixel.live:
-                pygame.draw.circle(self.__screen, color, loc, self.__scale)
+                pygame.draw.circle(self.__screen, pixel.color.raw, loc, self.__scale)
             else:
-                pygame.draw.rect(self.__screen, color, loc, self.__scale)
+                x, y = loc
+                rect = pygame.Rect(x - self.__scale, y + self.__scale, self.__scale, self.__scale)
+                pygame.draw.rect(self.__screen, pixel.color.raw, rect, self.__scale)
+            # Print DMX address info in addition to color.
             if self.__debug:
                 universe = pixel.address.universe
                 address = pixel.address.address
                 info = (universe, address)
-                label = font.render(str(info), __font_color)
+                label = self.__font.render(str(info), 1, PyGameRenderer.__font_color)
                 self.__screen.blit(label, loc)
         pygame.display.update()
 

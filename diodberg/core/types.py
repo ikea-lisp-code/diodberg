@@ -2,19 +2,12 @@
 # core objects, etc. I would have used collections, but I've prefer to have
 # some data safety.
 
-# TODO: Debug
-# TODO: Run pylint or a profiler of some kind on code.
-# TODO: Check out Pypy
-
-import pdb
-import threading
-import thread
-from collections import MutableMapping        
+from collections import MutableMapping
+import sys
 try: 
     from scipy.spatial import cKDTree
-except: 
-    # TODO: replace me with something more intelligent.
-    assert 0
+except ImportError as err: 
+    sys.stderr.write("Error: failed to import scipy.spatial module ({})".format(err))
 
 
 class Color(object):
@@ -25,16 +18,16 @@ class Color(object):
     __max = 255
     __size = 4
 
-    def __init__(self, r = 0, g = 0, b = 0, alpha = 0):
+    def __init__(self, red = 0, green = 0, blue = 0, alpha = 0):
         self.__color = bytearray([0, 0, 0, 0])
-        self.red = r
-        self.green = g
-        self.blue = b
+        self.red = red
+        self.green = green
+        self.blue = blue
         self.alpha = alpha
 
     @property
     def raw(self):
-        return (self.red, self.green, self.blue)
+        return (self.red, self.green, self.blue, self.alpha)
 
     def set_rgb(self, red, green, blue, alpha = 0):
         self.red = red
@@ -43,27 +36,38 @@ class Color(object):
         self.alpha = alpha
 
     # Red channel
-    def __get_r(self): return self.__color[0]
-    def __set_r(self, val): self.__set_val(0, val)
+    def __get_r(self): 
+        return self.__color[0]
+    def __set_r(self, val): 
+        self.__set_val(0, val)
 
     # Green channel
-    def __get_g(self): return self.__color[1]
-    def __set_g(self, val): self.__set_val(1, val)
+    def __get_g(self): 
+        return self.__color[1]
+    def __set_g(self, val): 
+        self.__set_val(1, val)
 
     # Blue channel
-    def __get_b(self): return self.__color[2]
-    def __set_b(self, val): self.__set_val(2, val)
+    def __get_b(self): 
+        return self.__color[2]
+    def __set_b(self, val): 
+        self.__set_val(2, val)
 
     # Alpha channel
-    def __get_a(self): return self.__color[3]
-    def __set_a(self, val): self.__set_val(3, val)
+    def __get_a(self): 
+        return self.__color[3]
+    def __set_a(self, val): 
+        self.__set_val(3, val)
 
     def __set_val(self, index, val):
         assert index < Color.__size
         try:
             self.__color[index] = val
         except ValueError:
-            self.__color[index] = Color.__max if val > Color.__max else Color.__min
+            if val > Color.__max:
+                self.__color[index] = Color.__max
+            else: 
+                self.__color[index] = Color.__min
 
     red = property(__get_r, __set_r, None, "Red channel.")    
     green = property(__get_g, __set_g, None, "Green channel.")
@@ -78,8 +82,8 @@ class Color(object):
 
 class Location(object):
     def __init__(self, x = 0, y = 0):
-        self.x = x
-        self.y = y
+        self.__x = x
+        self.__y = y
     
     @property
     def raw(self):
@@ -87,15 +91,21 @@ class Location(object):
 
     def set_loc(self, x, y):
         self.x = x
-        self.y = y    
+        self.y = y
 
-    def __get_x(self): return self.__x
-    def __set_x(self, val): self.__x = val
-    def __del_x(self): del self.__x
+    def __get_x(self): 
+        return self.__x
+    def __set_x(self, val): 
+        self.__x = val
+    def __del_x(self): 
+        del self.__x
 
-    def __get_y(self): return self.__y
-    def __set_y(self, val): self.__y = val
-    def __del_y(self): del self.__y
+    def __get_y(self): 
+        return self.__y
+    def __set_y(self, val): 
+        self.__y = val
+    def __del_y(self): 
+        del self.__y
 
     x = property(__get_x, __set_x, __del_x, "Horizontal x.")
     y = property(__get_y, __set_y, __del_y, "Vertical y.")
@@ -113,22 +123,29 @@ class DMXAddress(object):
     __dmx_upper = 512
     
     def __init__(self, universe = 0, address = 0):
-        self.universe = universe
-        self.address = address    
+        self.__universe = universe
+        self.__address = 0
+        self.address = address
 
-    def has_valid_address(): return self.address is not DMXAddress.__invalid_address
+    def is_valid(self): 
+        return self.address is not DMXAddress.__invalid_address
 
-    def __get_universe(self): return self.__universe
-    def __set_universe(self, val): self.__universe = val
-    def __del_universe(self): del self.__universe
+    def __get_universe(self): 
+        return self.__universe
+    def __set_universe(self, val): 
+        self.__universe = val
+    def __del_universe(self): 
+        del self.__universe
 
-    def __get_address(self): return self.__address
+    def __get_address(self): 
+        return self.__address
     def __set_address(self, val):
         if DMXAddress.__dmx_lower <= val <= DMXAddress.__dmx_upper:
             self.__address = val
         else:
             self.__address = DMXAddress.__invalid_address
-    def __del_address(self): del self.address
+    def __del_address(self): 
+        del self.__address
 
     universe = property(__get_universe, __set_universe, __del_universe, "DMX universe.")
     address = property(__get_address, __set_address, __del_address, "DMX address.")
@@ -143,28 +160,44 @@ class Pixel(object):
     DMX address.
     """
     
-    def __init__(self, color = Color(), location = Location(), address = DMXAddress(), live = False):
-        self.color = color
-        self.location = location
-        self.address = address
-        self.live = live
-        assert not live or (live and address.has_valid_address())            
+    def __init__(self, 
+                 color = Color(), 
+                 location = Location(), 
+                 address = DMXAddress(), 
+                 live = False):
+        self.__color = color
+        self.__location = location
+        self.__address = address
+        self.__live = live
+        assert not live or (live and address.is_valid())            
         
-    def __get_color(self): return self.__color
-    def __set_color(self, val): self.__color = val
-    def __del_color(self): del self.__color    
+    def __get_color(self): 
+        return self.__color
+    def __set_color(self, val): 
+        self.__color = val
+    def __del_color(self): 
+        del self.__color    
 
-    def __get_location(self): return self.__location
-    def __set_location(self, val): self.__location = val
-    def __del_location(self): del self.__location
+    def __get_location(self): 
+        return self.__location
+    def __set_location(self, val): 
+        self.__location = val
+    def __del_location(self): 
+        del self.__location
 
-    def __get_address(self): return self.__address
-    def __set_address(self, val): self.__address = val
-    def __del_address(self): del self.__address
+    def __get_address(self): 
+        return self.__address
+    def __set_address(self, val): 
+        self.__address = val
+    def __del_address(self): 
+        del self.__address
 
-    def __get_live(self): return self.__live
-    def __set_live(self, val): self.__live = val
-    def __del_live(self): del self.__live
+    def __get_live(self): 
+        return self.__live
+    def __set_live(self, val): 
+        self.__live = val
+    def __del_live(self): 
+        del self.__live
 
     color = property(__get_color, __set_color, __del_color, "RGB color.")
     location = property(__get_location, __set_location, __del_location, "Location (x, y).")
@@ -172,7 +205,10 @@ class Pixel(object):
     live = property(__get_live, __set_live, __del_live, "Is live pixel?")
 
     def __repr__(self):
-        return "".join(["<Pixel ", self.color, ",", self.location, ", live = ", self.live, ">"])
+        return "".join(["<Pixel ", 
+                        str(self.color), ",", 
+                        str(self.location), ", live = ", 
+                        str(self.live), ">"])
 
 
 class Panel(MutableMapping):
@@ -181,9 +217,12 @@ class Panel(MutableMapping):
     pixels.
     """ 
     
-    def __init__(self, pixels):
-        self.__pixels = dict(pixels)
-        self.__tree = cKDTree(self.locations)
+    def __init__(self):
+        self.__pixels = dict()
+        if len(self.locations) > 0:
+            self.__tree = cKDTree(self.locations)
+        else: 
+            self.__tree = None
 
     @property
     def locations(self):
@@ -194,6 +233,7 @@ class Panel(MutableMapping):
     def get_nearest(self, location, num_pixels):
         """ Returns the num_pixels closests pixels to a location. 
         """
+        assert self.__tree, "__tree is empty."
         return self.__tree.query_ball_point(location, num_pixels)
 
     def __contains__(self, key):
