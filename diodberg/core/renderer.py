@@ -1,7 +1,7 @@
 import array
 import pygame
 from pygame.locals import *
-from types import Color
+from diodberg.core.types import Color
 from ola.ClientWrapper import ClientWrapper
 
 
@@ -21,7 +21,6 @@ class Renderer(object):
 
 
 class DMXRenderer(Renderer):
-
     """ DMXRenderer provides a renderer interface to the OLA client. You should
     specify the number of DMX universes panel pixels are spread over.
     """
@@ -60,6 +59,7 @@ class DMXRenderer(Renderer):
 
 class PyGameRenderer(object):
     """PyGameRenderer provides a renderer interface to a PyGame simulation client.
+    Active (inactive) pixels are rendered as circles (squares).
     """
 
     __default_x_size = 640

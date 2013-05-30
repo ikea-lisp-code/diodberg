@@ -2,7 +2,7 @@
 
 import random
 
-from core.types import *
+from diodberg.core.types import *
 
 def random_color():
     """ Returns a random Color.
@@ -28,7 +28,9 @@ def random_panel(x = 640, y = 480, num_pixels = 200):
         panel[location.raw] = pixel
     return panel
 
-def discovery_panel():
+def discover_panel():
     """ Discovers the active pixels in a climbing wall.
     """ 
+    # TODO: Implement
+    assert 0
     pass

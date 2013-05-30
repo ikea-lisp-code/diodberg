@@ -1,12 +1,5 @@
 import time
 import threading
-try:
-    import psyco
-except ImportError:
-    pass
-else:
-    psyco.full()
-
 
 class Runner(threading.Thread):
     """ """
