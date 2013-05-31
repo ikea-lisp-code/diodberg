@@ -36,7 +36,7 @@ class Color(object):
     def hsv(self):
         """ HSV tuple.
         """
-        norm = __max
+        norm = Color.__max
         h, s, v = colorsys.rgb_to_hsv(self.red/norm, self.green/norm, self.blue/norm)
         return (360.*h, s, v)
 
@@ -52,9 +52,9 @@ class Color(object):
         """ Set HSV convenience method.
         """ 
         red, green, blue = colorsys.hsv_to_rgb(hue, saturation, value)
-        self.red = int(round(red*__max)))
-        self.green = int(round(green*__max))
-        self.blue = int(round(blue*__max))
+        self.red = int(round(red*Color.__max))
+        self.green = int(round(green*Color.__max))
+        self.blue = int(round(blue*Color.__max))
 
     # Red channel
     def __get_r(self): 
