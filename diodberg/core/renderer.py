@@ -74,8 +74,8 @@ class PyGameRenderer(Renderer):
     __default_y_size = 480
     __default_size = (__default_x_size, __default_y_size)
     __default_scale = 4
-    __black = Color(0, 0, 0).raw    
-    __font_color = Color(255, 255, 0).raw
+    __black = Color(0, 0, 0).rgba
+    __font_color = Color(255, 255, 0).rgba
 
     def __init__(self, 
                  size = (640, 480),
@@ -93,11 +93,11 @@ class PyGameRenderer(Renderer):
         self.__screen.fill(PyGameRenderer.__black)
         for loc, pixel in panel.items():
             if pixel.live:
-                pygame.draw.circle(self.__screen, pixel.color.raw, loc, self.__scale)
+                pygame.draw.circle(self.__screen, pixel.color.rgba, loc, self.__scale)
             else:
                 x, y = loc
                 rect = pygame.Rect(x - self.__scale, y + self.__scale, self.__scale, self.__scale)
-                pygame.draw.rect(self.__screen, pixel.color.raw, rect, self.__scale)
+                pygame.draw.rect(self.__screen, pixel.color.rgba, rect, self.__scale)
             # Print DMX address info in addition to color.
             if self.__debug:
                 universe = pixel.address.universe

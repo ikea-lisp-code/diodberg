@@ -3,6 +3,7 @@
 # some data safety.
 
 from collections import MutableMapping
+import colorsys
 import sys
 try: 
     from scipy.spatial import cKDTree
@@ -11,7 +12,7 @@ except ImportError as err:
 
 
 class Color(object):
-    """ RGB color representation. Saturates for invalid values.
+    """ Color representation, stored as RGB. Saturates for invalid values. 
     """
 
     __min = 0
@@ -26,14 +27,34 @@ class Color(object):
         self.alpha = alpha
 
     @property
-    def raw(self):
+    def rgba(self):
+        """ Raw RGB-Alpha tuple.
+        """
         return (self.red, self.green, self.blue, self.alpha)
 
+    @property
+    def hsv(self):
+        """ HSV tuple.
+        """
+        norm = __max
+        h, s, v = colorsys.rgb_to_hsv(self.red/norm, self.green/norm, self.blue/norm)
+        return (360.*h, s, v)
+
     def set_rgb(self, red, green, blue, alpha = 0):
+        """ Set RGB convenience method.
+        """ 
         self.red = red
         self.green = green
         self.blue = blue
         self.alpha = alpha
+
+    def set_hsv(self, hue, saturation, value):
+        """ Set HSV convenience method.
+        """ 
+        red, green, blue = colorsys.hsv_to_rgb(hue, saturation, value)
+        self.red = int(round(red*__max)))
+        self.green = int(round(green*__max))
+        self.blue = int(round(blue*__max))
 
     # Red channel
     def __get_r(self): 
