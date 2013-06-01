@@ -15,12 +15,13 @@ class Color(object):
     """ Color representation, stored as RGB. Saturates for invalid values. 
     """
 
-    __min = 0
-    __max = 255
-    __size = 4
+    __min = 0           # RGB min
+    __max = 255         # RGB max
+    __hue_max = 360.    # Hue max
 
     def __init__(self, red = 0, green = 0, blue = 0, alpha = 0):
         self.__color = bytearray([0, 0, 0, 0])
+        self.__size = len(self.__color)
         self.red = red
         self.green = green
         self.blue = blue
@@ -28,17 +29,17 @@ class Color(object):
 
     @property
     def rgba(self):
-        """ Raw RGB-Alpha tuple.
+        """ Raw RGB-Alpha tuple (not normalized).
         """
         return (self.red, self.green, self.blue, self.alpha)
 
     @property
     def hsv(self):
-        """ HSV tuple.
+        """ HSV tuple (not normalized).
         """
-        norm = Color.__max
+        norm = float(Color.__max)
         h, s, v = colorsys.rgb_to_hsv(self.red/norm, self.green/norm, self.blue/norm)
-        return (360.*h, s, v)
+        return (Color.__hue_max*h, s, v)
 
     def set_rgb(self, red, green, blue, alpha = 0):
         """ Set RGB convenience method.
@@ -49,9 +50,10 @@ class Color(object):
         self.alpha = alpha
 
     def set_hsv(self, hue, saturation, value):
-        """ Set HSV convenience method.
+        """ Set HSV convenience method. Assumes that a max range of (360., 1., 1.).
         """ 
-        red, green, blue = colorsys.hsv_to_rgb(hue, saturation, value)
+        norm_hue = hue/Color.__hue_max
+        red, green, blue = colorsys.hsv_to_rgb(norm_hue, saturation, value)
         self.red = int(round(red*Color.__max))
         self.green = int(round(green*Color.__max))
         self.blue = int(round(blue*Color.__max))
@@ -81,7 +83,7 @@ class Color(object):
         self.__set_val(3, val)
 
     def __set_val(self, index, val):
-        assert index < Color.__size
+        assert index < self.__size
         try:
             self.__color[index] = val
         except ValueError:

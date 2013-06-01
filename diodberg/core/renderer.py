@@ -46,7 +46,7 @@ class DMXRenderer(Renderer):
 
     def render(self, panel):
         # Fill in the buffer.
-        for pixel in panel:
+        for loc, pixel in panel.items():
             if pixel.live:
                 universe = pixel.address.universe
                 address = pixel.address.address
@@ -70,12 +70,10 @@ class PyGameRenderer(Renderer):
     Active (inactive) pixels are rendered as circles (squares).
     """
 
-    __default_x_size = 640
-    __default_y_size = 480
-    __default_size = (__default_x_size, __default_y_size)
-    __default_scale = 4
     __black = Color(0, 0, 0).rgba
     __font_color = Color(255, 255, 0).rgba
+    __font_size = 10
+    __default_font = "monospace"
 
     def __init__(self, 
                  size = (640, 480),
@@ -85,25 +83,29 @@ class PyGameRenderer(Renderer):
         pygame.init()
         self.__screen = pygame.display.set_mode(size)
         self.__screen.fill(PyGameRenderer.__black)
-        self.__font = pygame.font.SysFont("monospace", 10)
+        self.__font = pygame.font.SysFont(PyGameRenderer.__default_font, 
+                                          PyGameRenderer.__font_size)
         self.__scale = scale
         self.__debug = debug
 
     def render(self, panel):
         self.__screen.fill(PyGameRenderer.__black)
+        width = self.__scale
         for loc, pixel in panel.items():
             if pixel.live:
-                pygame.draw.circle(self.__screen, pixel.color.rgba, loc, self.__scale)
+                pygame.draw.circle(self.__screen, pixel.color.rgba, loc, width)
             else:
                 x, y = loc
-                rect = pygame.Rect(x - self.__scale, y + self.__scale, self.__scale, self.__scale)
-                pygame.draw.rect(self.__screen, pixel.color.rgba, rect, self.__scale)
+                rect = pygame.Rect(x - width, y + width, width, width)
+                pygame.draw.rect(self.__screen, pixel.color.rgba, rect, width)
             # Print DMX address info in addition to color.
             if self.__debug:
                 universe = pixel.address.universe
                 address = pixel.address.address
                 info = (universe, address)
-                label = self.__font.render(str(info), 1, PyGameRenderer.__font_color)
+                label = self.__font.render(str(info), 
+                                           True,
+                                           PyGameRenderer.__font_color)
                 self.__screen.blit(label, loc)
         pygame.display.update()
 

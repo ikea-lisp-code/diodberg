@@ -1,24 +1,23 @@
 import time
 import threading
 
+
 class Runner(threading.Thread):
     """ A Runner is the primary execution thread for a Panel visualization. An
     abstract class, it takes a Panel of pixels and a Renderer and executes 
     a rendering action for that panel.
     """ 
     
-    __default_sleep = 30
+    __default_sleep = 100/1000.
     
     def __init__(self, panel, name, renderer):
         super(Runner, self).__init__()
-        self.__lock = threading.Lock()
         self.daemon = True
         self.running = False
+        self.__lock = threading.Lock()
         self.__panel = panel
         self.__name = name
         self.__renderer = renderer
-        self.__framecount = 0
-        self.__last_tick = 0
 
     def init(self):
         """ Initializes any environmental parameters based on the panel info.
@@ -33,18 +32,12 @@ class Runner(threading.Thread):
         pass
 
     def run(self):
-        self.running = True        
+        self.running = True
         self.init()
         while self.running:
-            if not self.__framecount % 30:
-                tick = time.time()
-                if self.__last_tick:
-                    print "FPS: %0.2f" % (30 / (tick - self.__last_tick))
-                self.__last_tick = tick
-            self.__framecount += 1
             self.__lock.acquire()
             self.fill()
-            self.__renderer.render(self.panel)
+            self.__renderer.render(self.__panel)
             self.__lock.release()
             time.sleep(Runner.__default_sleep)
         
@@ -74,22 +67,27 @@ class Runner(threading.Thread):
     renderer = property(__get_renderer, __set_renderer, __del_renderer, "Renderer.")
 
     def __repr__(self):
-        "Runner"
+        return "Runner"
+
 
 #TODO: Extend to multiple threads
 class Controller(object):
     """ Controller initializes a set of Runner threads and shares execution between
-    them. 
+    them. It this doesn't control switching between different runners, it's
+    much useless.
     """
     def __init__(self, panel, renderer):
         self.__panel = panel
         self.__renderer = renderer
         self.__running = False
 
+    # TODO: Thread continues execution within python but immediately exits when
+    # called from the command line. why?
     def run(self, runner):
-        runner.panel = self.__panel
-        runner.renderer = self.__renderer
+        # runner.panel = self.__panel
+        # runner.renderer = self.__renderer
         try:
             runner.start()
-        except:
+        except KeyboardInterrupt:
             runner.running = False
+            exit()
