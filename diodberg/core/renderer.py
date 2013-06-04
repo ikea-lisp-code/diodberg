@@ -5,7 +5,6 @@ import time
 from diodberg.core.types import Color
 # Protocol-specific imports
 try:
-    from ola.ClientWrapper import ClientWrapper
     import RPi.GPIO
     import serial
 except ImportError as err: 
@@ -28,45 +27,6 @@ class Renderer(object):
 
     def __repr__(self):
         pass
-
-
-class DMXRenderer(Renderer):
-    """ DMXRenderer provides a renderer interface to the OLA client. You should
-    specify the number of DMX universes panel pixels are spread over.
-    """
-    
-    __dmx_buffer_size = 512
-    __default_channel_val = 0
-    
-    def __init__(self, universes = 1):
-        super(DMXRenderer, self).__init__()
-        # Initialize a shared storage buffer
-        default_buffer = [DMXRenderer.__default_channel_val]*DMXRenderer.__dmx_buffer_size
-        self.__buffer = {}
-        for i in xrange(universes):
-            self.__buffer[i] = array.array('B', default_buffer)
-        self.__wrapper = ClientWrapper()
-        self.__client = self.__wrapper.Client()
-
-    def render(self, panel):
-        # Fill in the buffer.
-        for loc, pixel in panel.items():
-            if pixel.live:
-                universe = pixel.address.universe
-                address = pixel.address.address
-                self.__buffer[universe][address] = pixel.color.red
-                self.__buffer[universe][address + 1] = pixel.color.green
-                self.__buffer[universe][address + 2] = pixel.color.blue
-        # Send the buffer over DMX.
-        for universe, buf in self.__buffer.iteritems():
-            self.__client.SendDmx(universe, buf, self.__dmx_sent)
-            self.__wrapper.Run()
-        
-    def __dmx_sent(self):
-        self.__wrapper.Stop()
-
-    def __repr__(self):
-        return "DMXRenderer"
 
 
 class DMXSerialRenderer(Renderer):
@@ -139,12 +99,12 @@ class PiGPIORenderer(Renderer):
 
     def __init__(self, channels = 26):
         super(PiGPIORenderer, self).__init__()
-        RPI.GPIO.setmode(RPI.GPIO.BOARD)
-        RPI.GPIO.setwarnings(True)
+        RPi.GPIO.setmode(RPi.GPIO.BOARD)
+        RPi.GPIO.setwarnings(True)
         self.__pwm = []
         for channel in xrange(channels):
-            RPI.GPIO.setup(channel, RPI.GPIO.OUT, initial = RPI.GPIO.LOW)
-            self.__pwm.append(RPI.GPIO.PWM(channel, PiGPIORenderer.__pwm_frequencyHz))
+            RPi.GPIO.setup(channel, RPi.GPIO.OUT, initial = RPi.GPIO.LOW)
+            self.__pwm.append(RPi.GPIO.PWM(channel, PiGPIORenderer.__pwm_frequencyHz))
             self.__pwm[channel].start(PiGPIORenderer.__pwm_init_dc)
         
     def render(self, panel):
@@ -159,7 +119,7 @@ class PiGPIORenderer(Renderer):
     def __del__(self):
         for pwm_channel in self.__pwm:
             pwm_channel.stop()
-        RPI.GPIO.cleanup()
+        RPi.GPIO.cleanup()
 
     def __repr__(self):
         return "PiGPIORenderer"
@@ -182,11 +142,11 @@ class PiToWS2812Renderer(Renderer):
 
     def __init__(self, channels):
         super(PiToWS2812Renderer, self).__init__()
-        RPI.GPIO.setmode(RPI.GPIO.BOARD)
-        RPI.GPIO.setwarnings(True)
+        RPi.GPIO.setmode(RPi.GPIO.BOARD)
+        RPi.GPIO.setwarnings(True)
         assert len(channels) > 0, "Empty number of GPIO pins from RPi." 
         for channel in channels:
-            RPI.GPIO.setup(channel, RPI.GPIO.OUT, initial = RPI.GPIO.LOW)            
+            RPi.GPIO.setup(channel, RPi.GPIO.OUT, initial = RPi.GPIO.LOW)            
         
     def render(self, panel):
         for loc, pixel in panel.items():
@@ -195,19 +155,19 @@ class PiToWS2812Renderer(Renderer):
             data = pixel.color.green << 16 | pixel.color.red << 8 | pixel.color.blue
             for i in xrange(PiToWS2812Renderer.__bit_width, -1, -1):
                 if data & (1 << i):
-                    RPI.GPIO.output(channel, RPI.GPIO.HIGH)
+                    RPi.GPIO.output(channel, RPi.GPIO.HIGH)
                     time.sleep(PiToWS2812Renderer.__sleep_T1HS)
-                    RPI.GPIO.output(channel, RPI.GPIO.LOW)
+                    RPi.GPIO.output(channel, RPi.GPIO.LOW)
                     time.sleep(PiToWS2812Renderer.__sleep_T1LS)
                 else:
-                    RPI.GPIO.output(channel, RPI.GPIO.HIGH)
+                    RPi.GPIO.output(channel, RPi.GPIO.HIGH)
                     time.sleep(PiToWS2812Renderer.__sleep_T0HS)
-                    RPI.GPIO.output(channel, RPI.GPIO.LOW)
+                    RPi.GPIO.output(channel, RPi.GPIO.LOW)
                     time.sleep(PiToWS2812Renderer.__sleep_T0LS)
             time.sleep(PiToWS2812Renderer.__sleep_resetS)
 
     def __del__(self):
-        RPI.GPIO.cleanup()
+        RPi.GPIO.cleanup()
 
     def __repr__(self):
         return "PiToWS2812Renderer"
