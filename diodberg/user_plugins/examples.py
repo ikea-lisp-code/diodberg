@@ -60,7 +60,7 @@ def simulation_main():
 
 
 def pi_test_main():
-    """ Runs a test routine for watching examples. """
+    """ Runs a test routine for testing WS2812. """
     from diodberg.core.runner import Controller
     from diodberg.util.utils import read_panel
     from diodberg.core.renderer import PiToWS2812Renderer
@@ -72,5 +72,16 @@ def pi_test_main():
     controller.run(runner)
 
 
+def pi_serial_main():
+    """ Runs a test routine for testing serial DMX output."""
+    from diodberg.core.runner import Controller
+    from diodberg.core.renderer import DMXSerialRenderer
+    panel = random_panel(num_pixels = 1, live = True)
+    renderer = DMXSerialRenderer()
+    runner = CycleHue(panel, renderer)
+    controller = Controller(panel, renderer)
+    controller.run(runner)
+
+    
 if __name__ == "main":
-    pi_test_main()    
+    pi_serial_main()

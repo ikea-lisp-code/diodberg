@@ -7,6 +7,7 @@ from diodberg.core.types import Color
 try:
     from ola.ClientWrapper import ClientWrapper
     import RPI.GPIO
+    import serial
 except ImportError as err: 
     sys.stderr.write("Error: failed to import module ({})".format(err))
 
@@ -66,6 +67,60 @@ class DMXRenderer(Renderer):
 
     def __repr__(self):
         return "DMXRenderer"
+
+
+class DMXSerialRenderer(Renderer):
+    """ DMXSerialRenderer provides a renderer interface to a custom DMX shield 
+    using the RaspberryPi serial port. (TODO) It currently only supports a single
+    universe.
+    """ 
+
+    __dmx_buffer_size = 512
+    __default_channel_val = 0
+    __device_name = "/dev/ttyAMA0"
+    __baud_rateHz = 250000
+    __timeout = 3.
+    
+    def __init__(self, universes = 1):
+        super(DMXSerialRenderer, self).__init__()        
+        self.__port = serial.Serial(port = DMXSerialRenderer.__device_name,
+                                    baudrate = DMXSerialRenderer.__baud_rateHz,
+                                    timeout = DMXSerialRenderer.__timeout)
+        # Initialize a shared storage buffer
+        default_buffer = [DMXSerialRenderer.__default_channel_val]*DMXSerialRenderer.__dmx_buffer_size
+        self.__buffer = {}
+        for i in xrange(universes):
+            self.__buffer[i] = bytearray(default_buffer)
+            
+        
+    def render(self, panel):
+        # Fill in the buffer.
+        for loc, pixel in panel.items():
+            if pixel.live:
+                universe = pixel.address.universe
+                address = pixel.address.address
+                self.__buffer[universe][address] = pixel.color.red
+                self.__buffer[universe][address + 1] = pixel.color.green
+                self.__buffer[universe][address + 2] = pixel.color.blue
+        # Send the buffer over DMX.
+        for universe, buf in self.__buffer.iteritems():
+            self.__send_dmx(universe, buf)
+
+    def __send_dmx(self, universe, buf):
+        """ Sends the DMX packet over serial.
+        """ 
+        self.__port.baudrate = DMXSerialRenderer.__baud_rateHz/2
+        self.__port.write(bytes([0]))
+        self.__port.baudrate = DMXSerialRenderer.__baud_rateHz
+        self.__port.write(bytes[(0)])
+        self.__port.write(buf)
+        
+    def __del__(self):
+        self.__port.close()
+
+    def __repr__(self):
+        return "DMXSerialRenderer"
+        
 
 
 class PiGPIORenderer(Renderer):

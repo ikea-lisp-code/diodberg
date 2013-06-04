@@ -24,7 +24,7 @@ def random_location(x_upper_bound = 100, y_upper_bound = 100):
     return Location(x, y)
 
 
-def random_panel(x = 640, y = 480, num_pixels = 200):
+def random_panel(x = 640, y = 480, num_pixels = 200, live = False):
     """ Returns a randomly populated panel, for simulation. 
     """
     panel = Panel()
@@ -32,7 +32,7 @@ def random_panel(x = 640, y = 480, num_pixels = 200):
         color = random_color()
         location = random_location(x, y)
         address = DMXAddress(0, 0)
-        pixel = Pixel(color, location, address, live = False)
+        pixel = Pixel(color, location, address, live)
         panel[location.raw] = pixel
     return panel
 
