@@ -40,7 +40,7 @@ class CycleHue(Runner):
     def fill(self):
         for loc, pixel in self.panel.items():
             h, s, v = pixel.color.hsv
-            h = h + 20 if h + 20 <= 360 else 0
+            h = (h + 20) % 360
             pixel.color.set_hsv(h, s, v)
 
     def __repr__(self):

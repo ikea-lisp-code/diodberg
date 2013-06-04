@@ -80,18 +80,23 @@ class DMXSerialRenderer(Renderer):
     __device_name = "/dev/ttyAMA0"
     __baud_rateHz = 250000
     __timeout = 3.
+    __bytesize = serial.EIGHTBITS
+    __parity = serial.PARITY_NONE
+    __stopbits = serial.STOPBITS_TWO
     
     def __init__(self, universes = 1):
         super(DMXSerialRenderer, self).__init__()        
-        self.__port = serial.Serial(port = DMXSerialRenderer.__device_name,
-                                    baudrate = DMXSerialRenderer.__baud_rateHz,
-                                    timeout = DMXSerialRenderer.__timeout)
+        self.__port = serial.Serial(port = DMXSerialRenderer.__device_name)
+        self.__port.baudrate = DMXSerialRenderer.__baud_rateHz
+        self.__port.bytesize = DMXSerialRenderer.__bytesize
+        self.__port.parity = DMXSerialRenderer.__parity
+        self.__port.stopbits = DMXSerialRenderer.__stopbits
+        self.__port.timeout = DMXSerialRenderer.__timeout
         # Initialize a shared storage buffer
         default_buffer = [DMXSerialRenderer.__default_channel_val]*DMXSerialRenderer.__dmx_buffer_size
         self.__buffer = {}
         for i in xrange(universes):
-            self.__buffer[i] = bytearray(default_buffer)
-            
+            self.__buffer[i] = bytearray(default_buffer)            
         
     def render(self, panel):
         # Fill in the buffer.
@@ -119,8 +124,7 @@ class DMXSerialRenderer(Renderer):
         self.__port.close()
 
     def __repr__(self):
-        return "DMXSerialRenderer"
-        
+        return "DMXSerialRenderer"        
 
 
 class PiGPIORenderer(Renderer):
