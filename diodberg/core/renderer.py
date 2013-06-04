@@ -6,7 +6,7 @@ from diodberg.core.types import Color
 # Protocol-specific imports
 try:
     from ola.ClientWrapper import ClientWrapper
-    import RPI.GPIO
+    import RPi.GPIO
     import serial
 except ImportError as err: 
     sys.stderr.write("Error: failed to import module ({})".format(err))
@@ -112,7 +112,7 @@ class DMXSerialRenderer(Renderer):
         self.__port.baudrate = DMXSerialRenderer.__baud_rateHz/2
         self.__port.write(bytes([0]))
         self.__port.baudrate = DMXSerialRenderer.__baud_rateHz
-        self.__port.write(bytes[(0)])
+        self.__port.write(bytes([0]))
         self.__port.write(buf)
         
     def __del__(self):

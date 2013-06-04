@@ -75,6 +75,7 @@ def pi_test_main():
 def pi_serial_main():
     """ Runs a test routine for testing serial DMX output."""
     from diodberg.core.runner import Controller
+    from diodberg.util.utils import random_panel
     from diodberg.core.renderer import DMXSerialRenderer
     panel = random_panel(num_pixels = 1, live = True)
     renderer = DMXSerialRenderer()
