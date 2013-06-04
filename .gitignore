@@ -62,3 +62,5 @@ Thumbs.db
 *.s#8
 *.s#9
 control_board_combined.*
+specs/*
+gerbers/*
