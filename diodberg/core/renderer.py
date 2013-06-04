@@ -1,4 +1,3 @@
-import array
 import pygame
 import sys
 import time
@@ -69,9 +68,9 @@ class DMXSerialRenderer(Renderer):
                 self.__buffer[universe][address + 2] = pixel.color.blue
         # Send the buffer over DMX.
         for universe, buf in self.__buffer.iteritems():
-            self.__send_dmx(universe, buf)
+            self.send_dmx(universe, buf)
 
-    def __send_dmx(self, universe, buf):
+    def send_dmx(self, universe, buf):
         """ Sends the DMX packet over serial.
         """ 
         self.__port.baudrate = DMXSerialRenderer.__baud_rateHz/2
@@ -79,9 +78,14 @@ class DMXSerialRenderer(Renderer):
         self.__port.baudrate = DMXSerialRenderer.__baud_rateHz
         self.__port.write(chr(0))
         self.__port.write(buf)
+
+    def close(self):
+        """ Close the serial port.
+        """
+        self.__port.close()
         
     def __del__(self):
-        self.__port.close()
+        self.close()
 
     def __repr__(self):
         return "DMXSerialRenderer"        

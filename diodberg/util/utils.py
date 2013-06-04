@@ -74,10 +74,10 @@ def discover_panel():
     assert 0, "Not implemented yet. Use RDM?"
 
 
-def write_dmx(values = bytearray([255, 255, 255])):
+def write_dmx(buf = bytearray([255, 255, 255])):
     """ Simple test routine for DMX-over-serial.
     """
-    assert isinstance(values, bytearray)
+    assert isinstance(buf, bytearray)
     import serial
     # DMX serial default parameters
     device_name = "/dev/ttyAMA0"
@@ -95,5 +95,5 @@ def write_dmx(values = bytearray([255, 255, 255])):
     # on universe 0
     port.baudrate = default_baudrate
     port.write(chr(0))
-    port.write(values)
+    port.write(buf)
     port.close()
