@@ -45,7 +45,7 @@ class DMXSerialRenderer(Renderer):
     __stopbits = serial.STOPBITS_TWO
     
     def __init__(self, universes = 1):
-        super(DMXSerialRenderer, self).__init__()        
+        super(DMXSerialRenderer, self).__init__()
         self.__port = serial.Serial(port = DMXSerialRenderer.__device_name)
         self.__port.baudrate = DMXSerialRenderer.__baud_rateHz
         self.__port.bytesize = DMXSerialRenderer.__bytesize
@@ -75,9 +75,9 @@ class DMXSerialRenderer(Renderer):
         """ Sends the DMX packet over serial.
         """ 
         self.__port.baudrate = DMXSerialRenderer.__baud_rateHz/2
-        self.__port.write(bytes([0]))
+        self.__port.write(chr(0))
         self.__port.baudrate = DMXSerialRenderer.__baud_rateHz
-        self.__port.write(bytes([0]))
+        self.__port.write(chr(0))
         self.__port.write(buf)
         
     def __del__(self):
