@@ -252,6 +252,21 @@ class Panel(MutableMapping):
         """ Returns an array of (x, y) tuple locations for pixels.
         """
         return self.__pixels.keys()
+        
+    @property 
+    def addresses(self):
+        """ Returns a dictionary, keyed by DMX universe, of available DMX 
+        addresses.
+        """ 
+        address_dict = dict()
+        for loc, pixel in self.__pixels.items():
+            address = pixel.address.address
+            universe = pixel.address.universe
+            if universe not in ans:
+                address_dict[universe] = [address]
+            else:
+                address_dict[universe].append(address)
+        return address_dict
 
     def get_nearest(self, location, num_pixels):
         """ Returns the num_pixels closests pixels to a location. 

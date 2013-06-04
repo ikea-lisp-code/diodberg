@@ -47,8 +47,8 @@ class CycleHue(Runner):
         return super(CycleHue, self).__repr__() + ":" + self.name
 
 
-def main():
-    """ Runs a test routine for watching examples. """
+def simulation_main():
+    """ Runs a simulation test routine for watching examples. """
     from diodberg.core.runner import Controller
     from diodberg.util.utils import random_panel
     from diodberg.core.renderer import PyGameRenderer
@@ -59,5 +59,18 @@ def main():
     controller.run(runner)
 
 
+def pi_test_main():
+    """ Runs a test routine for watching examples. """
+    from diodberg.core.runner import Controller
+    from diodberg.util.utils import read_panel
+    from diodberg.core.renderer import PiToWS2812Renderer
+    panel = read_panel()
+    assert panel.has_key(0)
+    renderer = PiToWS2812Renderer(channels = panel.addresses[0])
+    runner = ToggleColors(panel, renderer)
+    controller = Controller(panel, renderer)
+    controller.run(runner)
+
+
 if __name__ == "main":
-    main()    
+    pi_test_main()    
