@@ -1174,6 +1174,14 @@ Standard 0603 ceramic capacitor, and 0.1" leaded capacitor.</description>
 <wire x1="-7.62" y1="58.42" x2="-15.24" y2="58.42" width="0.1524" layer="91"/>
 </segment>
 </net>
+<net name="N$2" class="0">
+<segment>
+<pinref part="U$3" gate="G$1" pin="DO"/>
+<wire x1="53.34" y1="86.36" x2="53.34" y2="53.34" width="0.1524" layer="91"/>
+<pinref part="U$1" gate="G$1" pin="1"/>
+<wire x1="53.34" y1="53.34" x2="-15.24" y2="53.34" width="0.1524" layer="91"/>
+</segment>
+</net>
 </nets>
 </sheet>
 </sheets>
