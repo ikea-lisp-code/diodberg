@@ -7,10 +7,9 @@ class Runner(threading.Thread):
     abstract class, it takes a Panel of pixels and a Renderer and executes 
     a rendering action for that panel.
     """ 
+
     
-    __default_sleep = 100/1000.
-    
-    def __init__(self, panel, name, renderer):
+    def __init__(self, panel, name, renderer, sleep = 100/1000.):
         super(Runner, self).__init__()
         self.daemon = True
         self.running = False
@@ -18,6 +17,7 @@ class Runner(threading.Thread):
         self.__panel = panel
         self.__name = name
         self.__renderer = renderer
+        self.__sleepS = sleep
 
     def init(self):
         """ Initializes any environmental parameters based on the panel info.
@@ -39,7 +39,7 @@ class Runner(threading.Thread):
             self.fill()
             self.__renderer.render(self.__panel)
             self.__lock.release()
-            time.sleep(Runner.__default_sleep)
+            time.sleep(self.__sleepS)
         
     def __get_panel(self): 
         return self.__panel

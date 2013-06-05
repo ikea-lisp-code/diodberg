@@ -30,14 +30,15 @@ class Renderer(object):
 
 class DMXSerialRenderer(Renderer):
     """ DMXSerialRenderer provides a renderer interface to a custom DMX shield 
-    using the RaspberryPi serial port. (TODO) It currently only supports a single
-    universe.
+    using the RaspberryPi serial port.
+    TODO: The baudrate on the Pi currently ceilings at 115200 baud. Change back to 
+    250000 baud when fixed on the Pi-side.
     """ 
 
     __dmx_buffer_size = 512
     __default_channel_val = 0
     __device_name = "/dev/ttyAMA0"
-    __baud_rateHz = 250000
+    __baud_rateHz = 115200
     __timeout = 3.
     __bytesize = serial.EIGHTBITS
     __parity = serial.PARITY_NONE

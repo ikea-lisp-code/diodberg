@@ -79,7 +79,7 @@ def pi_serial_main():
     from diodberg.core.renderer import DMXSerialRenderer
     panel = random_panel(num_pixels = 1, live = True)
     renderer = DMXSerialRenderer()
-    runner = CycleHue(panel, renderer)
+    runner = CycleHue(panel, renderer, sleep = 1.)
     controller = Controller(panel, renderer)
     controller.run(runner)
 
