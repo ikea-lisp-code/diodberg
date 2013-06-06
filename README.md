@@ -54,3 +54,7 @@ Directory/package contents:
 # Questions? 
 
 Email <mookerji@spin-one.org>, <chris@notspelledright.com>, <yuanyu.chen@gmail.com>
+
+# License
+
+Copyright (C) 2013 ikea-lisp-code. Distributed under the MIT License.
