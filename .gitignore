@@ -54,5 +54,3 @@ nosetests.xml
 *.s#7
 *.s#8
 *.s#9
-specs/*
-gerbers/*
