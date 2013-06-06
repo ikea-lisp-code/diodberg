@@ -11,15 +11,15 @@ from diodberg.util.utils import random_color
 class ToggleColors(Runner):
     """ Random toggles colors. """
 
-    def __init__(self, panel, renderer):
+    def __init__(self, panel, renderer, sleep = 1):
         name = "ToggerColors"
-        super(ToggleColors, self).__init__(panel, name, renderer)
+        super(ToggleColors, self).__init__(panel, name, renderer, sleep)
     
     def init(self):
         pass
 
     def fill(self):
-        for loc, pixel in self.panel.items():
+        for loc, pixel in self.panel.iteritems():
             r, g, b, alpha = random_color().rgba
             pixel.color.set_rgb(r, g, b)
 
@@ -30,7 +30,7 @@ class ToggleColors(Runner):
 class CycleHue(Runner):
     """ Cycles hues. """
 
-    def __init__(self, panel, renderer):
+    def __init__(self, panel, renderer, sleep = 0.01):
         name = "CycleHue"
         super(CycleHue, self).__init__(panel, name, renderer)
     
@@ -38,7 +38,7 @@ class CycleHue(Runner):
         pass
 
     def fill(self):
-        for loc, pixel in self.panel.items():
+        for loc, pixel in self.panel.iteritems():
             h, s, v = pixel.color.hsv
             h = (h + 20) % 360
             pixel.color.set_hsv(h, s, v)
@@ -51,38 +51,13 @@ def simulation_main():
     """ Runs a simulation test routine for watching examples. """
     from diodberg.core.runner import Controller
     from diodberg.util.utils import random_panel
-    from diodberg.core.renderer import PyGameRenderer
+    from diodberg.renderers.simulation_renderers import PyGameRenderer
     panel = random_panel()
     renderer = PyGameRenderer(debug = True)
     runner = CycleHue(panel, renderer)
     controller = Controller(panel, renderer)
     controller.run(runner)
 
-
-def pi_test_main():
-    """ Runs a test routine for testing WS2812. """
-    from diodberg.core.runner import Controller
-    from diodberg.util.utils import read_panel
-    from diodberg.core.renderer import PiToWS2812Renderer
-    panel = read_panel()
-    assert panel.has_key(0)
-    renderer = PiToWS2812Renderer(channels = panel.addresses[0])
-    runner = ToggleColors(panel, renderer)
-    controller = Controller(panel, renderer)
-    controller.run(runner)
-
-
-def pi_serial_main():
-    """ Runs a test routine for testing serial DMX output."""
-    from diodberg.core.runner import Controller
-    from diodberg.util.utils import random_panel
-    from diodberg.core.renderer import DMXSerialRenderer
-    panel = random_panel(num_pixels = 1, live = True)
-    renderer = DMXSerialRenderer()
-    runner = CycleHue(panel, renderer, sleep = 1.)
-    controller = Controller(panel, renderer)
-    controller.run(runner)
-
     
 if __name__ == "main":
-    pi_serial_main()
+    simulation_main()

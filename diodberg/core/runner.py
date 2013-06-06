@@ -8,8 +8,9 @@ class Runner(threading.Thread):
     a rendering action for that panel.
     """ 
 
+    __slots__ = {'__lock', '__panel', '__name', '__renderer', '__sleepS'}
     
-    def __init__(self, panel, name, renderer, sleep = 100/1000.):
+    def __init__(self, panel, name, renderer):
         super(Runner, self).__init__()
         self.daemon = True
         self.running = False
@@ -90,4 +91,3 @@ class Controller(object):
             runner.start()
         except KeyboardInterrupt:
             runner.running = False
-            exit()

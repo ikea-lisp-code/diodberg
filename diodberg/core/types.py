@@ -5,23 +5,20 @@
 from collections import MutableMapping
 import colorsys
 import sys
-try: 
-    from scipy.spatial import cKDTree
-except ImportError as err: 
-    sys.stderr.write("Error: failed to import scipy.spatial module ({})".format(err))
+import numpy as np
 
 
 class Color(object):
-    """ Color representation, stored as RGB. Saturates for invalid values. 
+    """ Color representation, stored as RGB. Saturates for invalid values (FIX).
     """
 
     __min = 0           # RGB min
     __max = 255         # RGB max
     __hue_max = 360.    # Hue max
+    
+    __slots__ = {'red', 'green', 'blue', 'alpha'}
 
     def __init__(self, red = 0, green = 0, blue = 0, alpha = 0):
-        self.__color = bytearray([0, 0, 0, 0])
-        self.__size = len(self.__color)
         self.red = red
         self.green = green
         self.blue = blue
@@ -58,45 +55,6 @@ class Color(object):
         self.green = int(round(green*Color.__max))
         self.blue = int(round(blue*Color.__max))
 
-    # Red channel
-    def __get_r(self): 
-        return self.__color[0]
-    def __set_r(self, val): 
-        self.__set_val(0, val)
-
-    # Green channel
-    def __get_g(self): 
-        return self.__color[1]
-    def __set_g(self, val): 
-        self.__set_val(1, val)
-
-    # Blue channel
-    def __get_b(self): 
-        return self.__color[2]
-    def __set_b(self, val): 
-        self.__set_val(2, val)
-
-    # Alpha channel
-    def __get_a(self): 
-        return self.__color[3]
-    def __set_a(self, val): 
-        self.__set_val(3, val)
-
-    def __set_val(self, index, val):
-        assert index < self.__size
-        try:
-            self.__color[index] = val
-        except ValueError:
-            if val > Color.__max:
-                self.__color[index] = Color.__max
-            else: 
-                self.__color[index] = Color.__min
-
-    red = property(__get_r, __set_r, None, "Red channel.")    
-    green = property(__get_g, __set_g, None, "Green channel.")
-    blue = property(__get_b, __set_b, None, "Blue channel.")
-    alpha = property(__get_a, __set_a, None, "Alpha channel.")
-
     def __repr__(self):
         val = (self.red, self.green, self.blue, self.alpha)
         formatted = "<Color (r = %0.3f, g = %0.3f, b = %0.3f, alpha = %0.3f)>"
@@ -104,6 +62,9 @@ class Color(object):
 
 
 class Location(object):
+
+    __slots__ = {'__x', '__y'}
+
     def __init__(self, x = 0, y = 0):
         self.__x = x
         self.__y = y
@@ -144,14 +105,15 @@ class DMXAddress(object):
     __invalid_address = -1
     __dmx_lower = 0
     __dmx_upper = 512
+
+    __slots__ = {'__universe', '__address'}
     
     def __init__(self, universe = 0, address = 0):
         self.__universe = universe
-        self.__address = 0
-        self.address = address
+        self.__address = address
 
     def is_valid(self): 
-        return self.address is not DMXAddress.__invalid_address
+        return self.__address is not DMXAddress.__invalid_address
 
     def __get_universe(self): 
         return self.__universe
@@ -182,6 +144,8 @@ class Pixel(object):
     """ A pixel has a color and location. If it is live, it must have a valid
     DMX address.
     """
+    
+    __slots__ = {'__color', '__location', '__address', '__live'}
     
     def __init__(self, 
                  color = Color(), 
@@ -240,12 +204,10 @@ class Panel(MutableMapping):
     pixels.
     """ 
     
+    __slots__ = {'__pixels'}
+    
     def __init__(self):
         self.__pixels = dict()
-        if len(self.locations) > 0:
-            self.__tree = cKDTree(self.locations)
-        else: 
-            self.__tree = None
 
     @property
     def locations(self):
@@ -268,12 +230,6 @@ class Panel(MutableMapping):
                 address_dict[universe].append(address)
         return address_dict
 
-    def get_nearest(self, location, num_pixels):
-        """ Returns the num_pixels closests pixels to a location. 
-        """
-        assert self.__tree, "__tree is empty."
-        return self.__tree.query_ball_point(location, num_pixels)
-
     def __contains__(self, key):
         return key in self.__pixels
 
@@ -281,8 +237,6 @@ class Panel(MutableMapping):
         return self.__pixels[key]
 
     def __setitem__(self, key, value):
-        if key not in self.__pixels:
-            self.__tree = cKDTree(self.locations + [key])
         self.__pixels[key] = value
 
     def __delitem__(self, key):
