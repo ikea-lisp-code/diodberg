@@ -156,9 +156,9 @@ class Pixel(object):
 
 
 class Panel(MutableMapping):
-    """ Panel represents a collection of pixels, representing a climbing wall.
-    It's structured as a dictionary with fast k-nearest neighbor access of
-    pixels.
+    """ Panel represents a collection of pixels, representing a climbing wall. It 
+    is currently structured as a dictionary keyed by (x, y). It will Very Soon be replaced
+    by a numpy matrix, although the iterator interface will likely remain the same.
     """
 
     __slots__ = {'__pixels'}
