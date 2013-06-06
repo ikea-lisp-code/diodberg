@@ -10,7 +10,7 @@ class Runner(threading.Thread):
 
     __slots__ = {'__lock', '__panel', '__name', '__renderer', '__sleepS'}
     
-    def __init__(self, panel, name, renderer):
+    def __init__(self, panel, name, renderer, sleep):
         super(Runner, self).__init__()
         self.daemon = True
         self.running = False
