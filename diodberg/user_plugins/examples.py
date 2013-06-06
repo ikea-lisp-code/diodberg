@@ -32,7 +32,7 @@ class CycleHue(Runner):
 
     def __init__(self, panel, renderer, sleep = 0.01):
         name = "CycleHue"
-        super(CycleHue, self).__init__(panel, name, renderer)
+        super(CycleHue, self).__init__(panel, name, renderer, sleep)
     
     def init(self):
         pass
