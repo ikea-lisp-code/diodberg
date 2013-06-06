@@ -2,18 +2,10 @@
 
 import random
 from diodberg.core.types import Color
-from diodberg.core.types import Location
 from diodberg.core.types import DMXAddress
 from diodberg.core.types import Pixel
 from diodberg.core.types import Panel
 from diodberg.renderers.simulation_renderers import PyGameRenderer
-
-
-def random_color():
-    """ Returns a random Color.
-    """
-    r, g, b = [random.randint(0, 255) for i in range(3)]
-    return Color(r, g, b)
 
 
 def random_location(x_upper_bound = 100, y_upper_bound = 100):
@@ -22,19 +14,21 @@ def random_location(x_upper_bound = 100, y_upper_bound = 100):
     assert x_upper_bound > 0 and y_upper_bound > 0
     x = random.randint(0, x_upper_bound - 1)
     y = random.randint(0, y_upper_bound - 1)
-    return Location(x, y)
+    return (x, y)
 
 
-def random_panel(x = 640, y = 480, num_pixels = 200, live = False):
+def random_panel(size = (640, 480), num_pixels = 200, live = False):
     """ Returns a randomly populated panel, for simulation. 
     """
+    x, y = size 
+    assert x*y >= num_pixels, "Number of pixels exceed snumber of slots."
     panel = Panel()
     for i in xrange(num_pixels):
-        color = random_color()
+        color = Color.random_color()
         location = random_location(x, y)
         address = DMXAddress(0, 0)
-        pixel = Pixel(color, location, address, live)
-        panel[location.raw] = pixel
+        pixel = Pixel(color, address, live)
+        panel[location] = pixel
     return panel
 
 
@@ -50,8 +44,8 @@ def read_panel(filename):
     A line in the file spec corresponds to a pixel:
         <dmx universe> <dmx address> <x location> <y location>
     For example:
-        0 0 10.5 3.2
-        0 2 10.5 3.5
+        0 0 10 3
+        0 2 10 2
     """
     panel = Panel()
     f = open(filename, 'r')
@@ -60,10 +54,10 @@ def read_panel(filename):
     for line in f:
         words = line.split()
         assert len(words) is size, "Invalid number of elements."
-        location = Location(words[i_universe], words[i_address])
-        address = DMXAddress(words[i_x], words[i_y])
-        pixel = Pixel(Color(0, 0, 0), location, address, live = True)
-        panel[location.raw] = pixel
+        location = (words[i_x], words[i_y])
+        address = DMXAddress(words[i_universe], words[i_address])
+        pixel = Pixel(Color(0, 0, 0), address, live = True)
+        panel[location] = pixel
     f.close()
     return panel
 

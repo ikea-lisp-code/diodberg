@@ -1,10 +1,9 @@
 # Utilities for testing the serial protocol.
 
-
-from diodberg.renderers.serial_renderers import DMXSerialRenderer
+import sys
 try:
     import serial
-except ImportError:
+except ImportError as err:
     sys.stderr.write("Error: failed to import module ({})".format(err))
 
 
@@ -34,6 +33,3 @@ def write_dmx(baudrate = 115200, buf = bytearray([255, 255, 255])):
     port.write(chr(0))
     port.write(buf)
     port.close()
-
-
-

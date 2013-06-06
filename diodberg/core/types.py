@@ -4,8 +4,7 @@
 
 from collections import MutableMapping
 import colorsys
-import sys
-import numpy as np
+import random
 
 
 class Color(object):
@@ -23,6 +22,13 @@ class Color(object):
         self.green = green
         self.blue = blue
         self.alpha = alpha
+        
+    @classmethod
+    def random_color(cls):
+        """ Returns a random Color.
+        """
+        r, g, b = [random.randint(0, 255) for i in range(3)]
+        return Color(r, g, b)
 
     @property
     def rgba(self):
@@ -59,44 +65,6 @@ class Color(object):
         val = (self.red, self.green, self.blue, self.alpha)
         formatted = "<Color (r = %0.3f, g = %0.3f, b = %0.3f, alpha = %0.3f)>"
         return formatted % val
-
-
-class Location(object):
-
-    __slots__ = {'__x', '__y'}
-
-    def __init__(self, x = 0, y = 0):
-        self.__x = x
-        self.__y = y
-    
-    @property
-    def raw(self):
-        return (self.x, self.y)
-
-    def set_loc(self, x, y):
-        self.x = x
-        self.y = y
-
-    def __get_x(self): 
-        return self.__x
-    def __set_x(self, val): 
-        self.__x = val
-    def __del_x(self): 
-        del self.__x
-
-    def __get_y(self): 
-        return self.__y
-    def __set_y(self, val): 
-        self.__y = val
-    def __del_y(self): 
-        del self.__y
-
-    x = property(__get_x, __set_x, __del_x, "Horizontal x.")
-    y = property(__get_y, __set_y, __del_y, "Vertical y.")
-    
-    def __repr__(self):
-        formatted = "<Location (x = %0.3f, y = %0.3f)>"
-        return formatted % (self.x, self.y)
 
 
 class DMXAddress(object):
@@ -145,15 +113,13 @@ class Pixel(object):
     DMX address.
     """
     
-    __slots__ = {'__color', '__location', '__address', '__live'}
+    __slots__ = {'__color', '__address', '__live'}
     
     def __init__(self, 
                  color = Color(), 
-                 location = Location(), 
                  address = DMXAddress(), 
                  live = False):
         self.__color = color
-        self.__location = location
         self.__address = address
         self.__live = live
         assert not live or (live and address.is_valid())            
@@ -164,13 +130,6 @@ class Pixel(object):
         self.__color = val
     def __del_color(self): 
         del self.__color    
-
-    def __get_location(self): 
-        return self.__location
-    def __set_location(self, val): 
-        self.__location = val
-    def __del_location(self): 
-        del self.__location
 
     def __get_address(self): 
         return self.__address
@@ -187,25 +146,23 @@ class Pixel(object):
         del self.__live
 
     color = property(__get_color, __set_color, __del_color, "RGB color.")
-    location = property(__get_location, __set_location, __del_location, "Location (x, y).")
     address = property(__get_address, __set_address, __del_address, "DMX address.")
     live = property(__get_live, __set_live, __del_live, "Is live pixel?")
 
     def __repr__(self):
         return "".join(["<Pixel ", 
                         str(self.color), ",", 
-                        str(self.location), ", live = ", 
-                        str(self.live), ">"])
+                        "live = ", str(self.live), ">"])
 
 
 class Panel(MutableMapping):
     """ Panel represents a collection of pixels, representing a climbing wall.
-    It's structured as a dictionary with fast k-nearest neighbor access of 
+    It's structured as a dictionary with fast k-nearest neighbor access of
     pixels.
-    """ 
-    
+    """
+
     __slots__ = {'__pixels'}
-    
+
     def __init__(self):
         self.__pixels = dict()
 
@@ -214,17 +171,17 @@ class Panel(MutableMapping):
         """ Returns an array of (x, y) tuple locations for pixels.
         """
         return self.__pixels.keys()
-        
-    @property 
+
+    @property
     def addresses(self):
-        """ Returns a dictionary, keyed by DMX universe, of available DMX 
+        """ Returns a dictionary, keyed by DMX universe, of available DMX
         addresses.
-        """ 
+        """
         address_dict = dict()
         for loc, pixel in self.__pixels.items():
             address = pixel.address.address
             universe = pixel.address.universe
-            if universe not in ans:
+            if universe not in address_dict:
                 address_dict[universe] = [address]
             else:
                 address_dict[universe].append(address)
@@ -247,6 +204,6 @@ class Panel(MutableMapping):
 
     def __iter__(self):
         return iter(self.__pixels)
-    
+
     def __repr__(self):
         return self.__pixels.__repr__()

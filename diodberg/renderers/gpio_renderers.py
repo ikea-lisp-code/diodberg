@@ -1,4 +1,5 @@
 from diodberg.core.renderer import Renderer
+import serial
 try:
     import RPi.GPIO
 except ImportError as err: 
@@ -14,6 +15,8 @@ class PiGPIORenderer(Renderer):
     __num_channels = 26
     __pwm_frequencyHz = 50
     __pwm_init_dc = 0
+    
+    __slots__ = {'__pwm'}
 
     def __init__(self, channels = 26):
         super(PiGPIORenderer, self).__init__()

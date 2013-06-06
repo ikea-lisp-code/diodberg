@@ -1,4 +1,5 @@
 from diodberg.core.renderer import Renderer
+import sys
 try:
     import serial
 except ImportError as err: 
@@ -20,6 +21,8 @@ class DMXSerialRenderer(Renderer):
     __bytesize = serial.EIGHTBITS
     __parity = serial.PARITY_NONE
     __stopbits = serial.STOPBITS_TWO
+
+    __slots__ = {'__port', '__buffer'}
     
     def __init__(self, universes = 1):
         super(DMXSerialRenderer, self).__init__()
@@ -74,11 +77,12 @@ def pi_serial_main():
     from diodberg.core.runner import Controller
     from diodberg.util.utils import random_panel
     from diodberg.user_plugins.examples import CycleHue
-    panel = random_panel(num_pixels = 1, live = True)
+    panel = random_panel(size = (1, 1), num_pixels = 1, live = True)
     renderer = DMXSerialRenderer()
     runner = CycleHue(panel, renderer, sleep = 1.)
     controller = Controller(panel, renderer)
     controller.run(runner)
     
-if __name__ == "main":
+
+if __name__ == "__main__":
     pi_serial_main()

@@ -12,6 +12,8 @@ class PyGameRenderer(Renderer):
     __font_color = Color(255, 255, 0).rgba
     __font_size = 10
     __default_font = "monospace"
+    
+    __slots__ = {'__screen', '__font', '__scale', '__debug'}
 
     def __init__(self, 
                  size = (640, 480),
@@ -50,3 +52,21 @@ class PyGameRenderer(Renderer):
 
     def __repr__(self):
         return "PyGameRenderer"
+
+
+def simulation_main():
+    """ Runs a simulation test routine for watching examples. 
+    """
+    from diodberg.core.runner import Controller
+    from diodberg.util.utils import random_panel
+    from diodberg.user_plugins.examples import CycleHue
+    from diodberg.renderers.simulation_renderers import PyGameRenderer
+    panel = random_panel()
+    renderer = PyGameRenderer(debug = True)
+    runner = CycleHue(panel, renderer)
+    controller = Controller(panel, renderer)
+    controller.run(runner)
+    
+
+if __name__ == "__main__":
+    simulation_main()

@@ -5,7 +5,7 @@
 
 
 from diodberg.core.runner import Runner
-from diodberg.util.utils import random_color
+from diodberg.core.types import Color
 
 
 class ToggleColors(Runner):
@@ -20,7 +20,7 @@ class ToggleColors(Runner):
 
     def fill(self):
         for loc, pixel in self.panel.iteritems():
-            r, g, b, alpha = random_color().rgba
+            r, g, b, alpha = Color.random_color().rgba
             pixel.color.set_rgb(r, g, b)
 
     def __repr__(self):
@@ -59,5 +59,5 @@ def simulation_main():
     controller.run(runner)
 
     
-if __name__ == "main":
+if __name__ == "__main__":
     simulation_main()

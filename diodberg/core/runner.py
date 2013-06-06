@@ -82,12 +82,15 @@ class Controller(object):
         self.__renderer = renderer
         self.__running = False
 
-    # TODO: Thread continues execution within python but immediately exits when
-    # called from the command line. why?
     def run(self, runner):
         # runner.panel = self.__panel
         # runner.renderer = self.__renderer
-        try:
+        try: 
             runner.start()
+            while True:
+                time.sleep(1)
         except KeyboardInterrupt:
             runner.running = False
+        finally:
+            print "\nQuiting!"
+            exit()        
