@@ -73,6 +73,7 @@ def pi_serial_main():
     """ Runs a test routine for testing serial DMX output."""
     from diodberg.core.runner import Controller
     from diodberg.util.utils import random_panel
+    from diodberg.user_plugins.examples import CycleHue
     panel = random_panel(num_pixels = 1, live = True)
     renderer = DMXSerialRenderer()
     runner = CycleHue(panel, renderer, sleep = 1.)
