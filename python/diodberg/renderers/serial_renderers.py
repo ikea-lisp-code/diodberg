@@ -72,12 +72,12 @@ class DMXSerialRenderer(Renderer):
         return "DMXSerialRenderer"
 
 
-def pi_serial_main():
+def pi_serial_main(num_pixels = 1):
     """ Runs a test routine for testing serial DMX output."""
     from diodberg.core.runner import Controller
     from diodberg.util.utils import random_panel
     from diodberg.user_plugins.examples import CycleHue
-    panel = random_panel(size = (1, 1), num_pixels = 1, live = True)
+    panel = random_panel(size = (num_pixels, 1), num_pixels, live = True)
     renderer = DMXSerialRenderer()
     runner = CycleHue(panel, renderer, sleep = 1.)
     controller = Controller(panel, renderer)

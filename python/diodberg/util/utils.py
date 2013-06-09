@@ -26,7 +26,7 @@ def random_panel(size = (640, 480), num_pixels = 200, live = False):
     for i in xrange(num_pixels):
         color = Color.random_color()
         location = random_location(x, y)
-        address = DMXAddress(0, 0)
+        address = DMXAddress(universe = 0, address = i)
         pixel = Pixel(color, address, live)
         panel[location] = pixel
     return panel
