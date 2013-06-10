@@ -15,7 +15,7 @@ def write_dmx(baudrate = 115200, buf = bytearray([255, 255, 255])):
     """
     assert isinstance(buf, bytearray)
     num_addresses = 512
-    assert len(buf) < num_addresses
+    assert len(buf) <= num_addresses
     # DMX serial default parameters
     device_name = "/dev/ttyAMA0"
     port = serial.Serial(device_name)
