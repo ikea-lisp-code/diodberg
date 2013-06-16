@@ -59,10 +59,16 @@ void setup()
      You can optionally pass an initial PWM value (0 - 4095) for all channels.*/
   Tlc.init();
   Tlc.set(0, 4095);
+  
+  // Set the differential transceiver to receive mode.
   digitalWrite(2, LOW);
   pinMode(2, OUTPUT);
+  
+  // Setup the DMX interrupts / parsing code.
   DMXSerial.init(DMXReceiver);
   Tlc.set(1, 4095);
+  
+  // Chill out.
   delay(500);
   Tlc.set(2, 4095);
 }
