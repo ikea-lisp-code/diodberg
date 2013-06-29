@@ -12,9 +12,17 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(2, 9, NEO_GRB + NEO_KHZ800);
 
 #define NUM_LEDS 16
 
+boolean demo_mode = false;
+uint_fast16_t dmx_address;
+
+
 void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
+  
+  // Configure the DIP switch pins to have pullups
+  PORTD |= (1 << 5) + (1 << 6) + (1 << 7);
+  PORTB |= (1 << 0);
   
   colorWipe(strip.Color(255,0,0), 50);
   
@@ -37,15 +45,26 @@ void setup() {
   DMXSerial.init(DMXReceiver);
   
   colorWipe(strip.Color(0,0,255), 50);
-  
   colorWipe(strip.Color(0,0,0), 50);
+  
+  // Get DIP switch settings for DMX address
+  dmx_address = (PIND >> 5) + ((PINB & 1) << 3);
+  dmx_address = dmx_address ^ 0x0F;
+  // Check for demo mode
+  if (dmx_address == 0x0F) {
+    demo_mode = true;
+  }
 }
 
 void loop() {
-  // Some example procedures showing how to display to the pixels:
-  for (uint8_t c = 0; c < NUM_LEDS; c++) {
-      uint8_t start = c*3;
-      setPixelColor(c, strip.Color(DMXSerial.read(start+1),DMXSerial.read(start+2), DMXSerial.read(start+3)));
+  if (!demo_mode) {
+    for (uint_fast16_t c = 0; c < NUM_LEDS; c++) {
+        uint_fast16_t start = dmx_address*(NUM_LEDS*3) + c*3;
+        setPixelColor(c, strip.Color(DMXSerial.read(start+1),DMXSerial.read(start+2), DMXSerial.read(start+3)));
+    }
+  }
+  else {
+     rainbow(50);
   }
 }
 
@@ -67,5 +86,30 @@ void colorWipe(uint32_t c, uint8_t wait) {
   for(uint16_t i=0; i<NUM_LEDS; i++) {
       setPixelColor(i, c);
       delay(wait);
+  }
+}
+
+void rainbow(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256; j++) {
+    for(i=0; i< NUM_LEDS; i++) {
+      setPixelColor(i, Wheel((i+j) & 255));
+    }
+    delay(wait);
+  }
+}
+
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos) {
+  if(WheelPos < 85) {
+   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+  } else if(WheelPos < 170) {
+   WheelPos -= 85;
+   return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  } else {
+   WheelPos -= 170;
+   return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
   }
 }
