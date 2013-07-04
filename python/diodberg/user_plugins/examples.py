@@ -50,9 +50,9 @@ class CycleHue(Runner):
 def simulation_main():
     """ Runs a simulation test routine for watching examples. """
     from diodberg.core.runner import Controller
-    from diodberg.util.utils import random_panel
+    from diodberg.core.types import Panel
     from diodberg.renderers.simulation_renderers import PyGameRenderer
-    panel = random_panel()
+    panel = Panel.random_panel()
     renderer = PyGameRenderer(debug = True)
     runner = CycleHue(panel, renderer)
     controller = Controller(panel, renderer)

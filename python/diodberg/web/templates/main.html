@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+  {% block head %}
+  <title>Diodberg Configuration Page</title>
+  <link rel="stylesheet" href="/static/flasky.css" />
+  <link href="/static/favicon.ico" rel="icon" type="image/x-icon" />
+  <!-- TODO: Before Burning Man, move locally to Pi (?). -->
+  {% endblock head %}
+</head>
+<body>
+  <div class="document">
+    <div class="documentwrapper">
+      <div class="bodywrapper">
+        <div class="body">
+          <div class="section" id="main">
+            <span id="id1"></span><h2>Diodberg Configuration Page</h2>
+            Load a panel configuration:
+            <form name="input" method="post">
+              <input type="text" name="filename"> Filename
+              <input type="submit" name="read"  value="Read from file">
+              <input type="submit" name="write" value="Write to file">
+            </form>
+            <span id="id2"></span><h3>DMX Address and Pixel Route Configuration</h3>            
+            <form name="input" method="post">
+              <input type="submit" name="address"  value="Set addresses">
+              <input type="submit" name="route" value="Set routes">
+            </form>
+            
+            <script src="/static/grid.js" type="text/javascript"> </script>
+
+            {% if name %}
+            <h4>Hello {{ name }}!</h4>
+            {% else %}
+            <h4>Hello World!</h4>
+            {% endif %}
+            <span id="id3"></span><h3>User Plugins</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

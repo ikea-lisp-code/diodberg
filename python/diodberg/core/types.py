@@ -3,8 +3,11 @@
 # some data safety.
 
 from collections import MutableMapping
+from collections import MutableSet
+from copy import deepcopy
 import colorsys
 import random
+from diodberg.util.utils import random_location
 
 
 class Color(object):
@@ -111,6 +114,7 @@ class DMXAddress(object):
 class Pixel(object):
     """ A pixel has a color and location. If it is live, it must have a valid
     DMX address.
+    TODO: Should this store the route number?
     """
     
     __slots__ = {'__color', '__address', '__live'}
@@ -155,16 +159,126 @@ class Pixel(object):
                         "live = ", str(self.live), ">"])
 
 
+class Group(MutableSet):
+    """ A natural grouping of pixels (e.g., for specifying a route).
+    """ 
+    
+    __slots__ = {'__pixels', '__name'}
+
+    def __init__(self, name = "default", filename = None, group = None):
+        self.__pixels = set()
+        self.name = name
+        if group is not None:
+            self.__pixels = deepcopy(group.__pixels)
+            self.__name = deepcopy(group.__name)
+        elif filename is not None:
+            f = open(filename, 'r')
+            size = 2
+            i_x, i_y = range(size)
+            i = 0
+            for line in f:
+                words = line.split()
+                assert len(words) is size, "Invalid number of elements. Line: " + i
+                location = (words[i_x], words[i_y])
+                self.add(location)
+                i += 1
+            f.close()
+    
+    @property
+    def locations(self):
+        return list(self.__pixels)
+
+    def show(self, debug = True):
+        """ Convenience method for viewing group.
+        """ 
+        from diodberg.renderers.simulation_renderers import PyGameRenderer
+        renderer = PyGameRenderer(debug = debug)
+        renderer.render(self)
+
+    def write(self, filename):
+        """ Writes a panel to a file-specification. 
+        A line in the file spec corresponds to a pixel:
+            <x location> <y location>
+        """ 
+        f = open(filename, 'w')
+        for loc, pixel in self.iteritems():
+            x, y = loc
+            print "".join([x, y], " ")
+        f.close()
+        
+    def iteritems(self):
+        """ Compatibility method for panel rendering API.
+        """ 
+        iterator = iter(self.__pixels)
+        red = Color(255, 0, 0)
+        yield (iterator.next(), Pixel(color = red))
+
+    def add(self, val):
+        self.__pixels.add(val)
+
+    def discard(self, val):
+        self.__pixels.discard(val)
+
+    def __contains__(self, key):
+        return key in self.__pixels
+
+    def __len__(self):
+        return len(self.__pixels)
+
+    def __iter__(self):
+        return iter(self.__pixels)    
+
+    def __get_name(self): 
+        return self.__name
+    def __set_name(self, val): 
+        self.__name = val
+    def __del_name(self): 
+        del self.__name
+
+    name = property(__get_name, __set_name, __del_name, "Route name/ID.")
+    
+    def __repr__(self):
+        return "".join(["Group<name = ", 
+                        self.__name, ", ", 
+                        str(self.__pixels), 
+                        ">"])
+
+
 class Panel(MutableMapping):
-    """ Panel represents a collection of pixels, representing a climbing wall. It 
-    is currently structured as a dictionary keyed by (x, y). It will Very Soon be replaced
-    by a numpy matrix, although the iterator interface will likely remain the same.
+    """ Panel represents a collection of pixels, representing a climbing wall. It
+    is currently structured as a dictionary keyed by (x, y) and can be
+    constructed from a file specification or copy-constructed from another
+    panel.
+
+    TODO: Replace with a numpy matrix.
+
     """
+    
+    __base_group = 0
+    __slots__ = {'__pixels', '__groups'}
 
-    __slots__ = {'__pixels'}
-
-    def __init__(self):
+    def __init__(self, panel = None, filename = None, panel_id = 0):
         self.__pixels = dict()
+        self.__groups = dict()
+        if panel is not None:
+            self.__pixels = deepcopy(panel.__pixels)
+            self.__groups = deepcopy(panel.groups)
+        elif filename is not None:
+            f = open(filename, 'r')
+            size = 6
+            i_universe, i_address, i_x, i_y, index, route = range(size)
+            i = 0
+            for line in f:
+                words = line.split()
+                assert len(words) is size, \
+                    "Invalid number of elements. Line: " + i
+                if words[index] is not panel_index:
+                    continue
+                location = (int(words[i_x]), int(words[i_y]))
+                address = DMXAddress(int(words[i_universe]), int(words[i_address]))
+                self.__pixels[location] = Pixel(Color(0, 0, 0), address, live = True)
+                i += 1
+            f.close()
 
     @property
     def locations(self):
@@ -187,6 +301,81 @@ class Panel(MutableMapping):
                 address_dict[universe].append(address)
         return address_dict
 
+    @property
+    def width(self):
+        """ Returns the (horizontal) panel width.
+        """ 
+        temp = self.__pixels.items()
+        temp.sort(key = lambda x: x[0][0])
+        return temp[len(temp) - 1][0][0] + 1
+
+    @property
+    def height(self):
+        """ Returns the (vertical) panel height.
+        """ 
+        temp = self.__pixels.items()
+        temp.sort(key = lambda x: x[0][1])
+        return temp[len(temp) - 1][0][1] + 1
+
+    @property
+    def groups(self):
+        """ Returns dictionary of groups for the panel, keyed by group name.
+        """ 
+        return self.__groups
+
+    def write(self, filename, panel_id):
+        """ Writes a panel to a file-specification. 
+        A line in the file spec corresponds to a pixel:
+            <dmx universe> <dmx address> <x location> <y location> <panel id> <group id>
+        For example:
+            0 0 10 3 1 0
+            0 2 10 2 1 1
+        """ 
+        f = open(filename, 'w')
+        for loc, pixel in self.iteritems():
+            universe = pixel.address.universe
+            address = pixel.address.address
+            x, y = loc
+            print "".join([universe, address, x, y], " ")
+        f.close()
+
+    def show(self, debug = True):
+        """ Convenience method for viewing panel.
+        """ 
+        from diodberg.renderers.simulation_renderers import PyGameRenderer
+        renderer = PyGameRenderer(debug = debug)
+        renderer.render(self)
+
+    @classmethod
+    def random_panel(self, size = (640, 480), num_pixels = 200, live = False):
+        """ Returns a randomly populated panel, for simulation. 
+        TODO: merge blank_panel into this.
+        """
+        x, y = size 
+        assert x*y >= num_pixels, "Number of pixels exceed snumber of slots."
+        panel = Panel()
+        for i in xrange(num_pixels):
+            color = Color.random_color()
+            location = random_location(x, y)
+            address = DMXAddress(universe = 0, address = i)
+            panel[location] = Pixel(color, address, live)
+        return panel
+
+    @classmethod
+    def blank_panel(self, size = (7, 11)):
+        """ Returns a blank default panel with default dimensions 
+        sized to the climbing wall.
+        """ 
+        x, y = size
+        panel = Panel()
+        for i in xrange(x):
+            for j in xrange(y):
+                color = Color(0, 0, 0)
+                location = (i, j)
+                address = DMXAddress(universe = 0, address = 0)
+                panel[location] = Pixel(color, address, live = False)
+        return panel
+    
     def __contains__(self, key):
         return key in self.__pixels
 
@@ -206,4 +395,4 @@ class Panel(MutableMapping):
         return iter(self.__pixels)
 
     def __repr__(self):
-        return self.__pixels.__repr__()
+        return "".join(["Panel<", str(self.__pixels), ">"])
