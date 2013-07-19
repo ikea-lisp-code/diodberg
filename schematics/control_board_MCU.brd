@@ -1307,9 +1307,6 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="61.722" y1="19.812" x2="70.104" y2="19.812" width="0.3048" layer="1"/>
 <wire x1="70.104" y1="19.812" x2="70.358" y2="19.558" width="0.3048" layer="1"/>
 <wire x1="70.358" y1="19.558" x2="70.358" y2="16.51" width="0.3048" layer="1"/>
-<wire x1="70.358" y1="16.51" x2="70.104" y2="16.256" width="0.3048" layer="1"/>
-<wire x1="70.104" y1="16.256" x2="66.203" y2="16.256" width="0.3048" layer="1"/>
-<wire x1="66.203" y1="16.256" x2="66.184" y2="16.275" width="0.3048" layer="1"/>
 <wire x1="64.516" y1="16.256" x2="63.5" y2="16.256" width="0.3048" layer="16"/>
 <wire x1="63.5" y1="16.256" x2="62.738" y2="15.494" width="0.3048" layer="16"/>
 <wire x1="62.738" y1="15.494" x2="59.436" y2="15.494" width="0.3048" layer="16"/>
@@ -1326,6 +1323,8 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="29.699740625" y1="17.380740625" x2="31.115" y2="18.796" width="0.3048" layer="16"/>
 <wire x1="20.447" y1="35.941" x2="20.447" y2="26.70081875" width="0.3048" layer="16"/>
 <wire x1="20.447" y1="26.70081875" x2="20.4619375" y2="26.68588125" width="0.3048" layer="16"/>
+<wire x1="66.184" y1="16.275" x2="70.123" y2="16.275" width="0.3048" layer="1"/>
+<wire x1="70.123" y1="16.275" x2="70.358" y2="16.51" width="0.3048" layer="1"/>
 </signal>
 <signal name="BLANK">
 <contactref element="TLC5947" pad="2"/>
@@ -2028,8 +2027,8 @@ Please make sure your boards conform to these design rules.</description>
 </signal>
 </signals>
 <errors>
-<approved hash="19,1,d027a5e3de79abbd"/>
 <approved hash="19,1,a1f3d437db47ae83"/>
+<approved hash="19,1,d027a5e3de79abbd"/>
 </errors>
 </board>
 </drawing>
