@@ -926,7 +926,6 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="VALUE" x="51.054" y="16.4465" size="0.8128" layer="27" ratio="15" rot="R270"/>
 </element>
 <element name="STANDOFF2" library="SparkFun-Electromechanical" package="STAND-OFF" value="STAND-OFF" x="49.657" y="9.144"/>
-<element name="STANDOFF4" library="SparkFun-Electromechanical" package="STAND-OFF" value="STAND-OFF" x="-4.318" y="24.384"/>
 <element name="U$17" library="751xx" package="D_R-PDSO-G8" value="75176B" x="32.087415625" y="39.910365625" smashed="yes" rot="R90">
 <attribute name="VALUE" x="38.564415625" y="43.974365625" size="1.27" layer="27" ratio="15" rot="R180"/>
 </element>
