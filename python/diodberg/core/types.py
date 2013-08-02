@@ -7,6 +7,7 @@ import colorsys
 from copy import deepcopy
 import json
 import random
+from diodberg.util.utils import ConditionalDecorator
 
 
 use_numba = False
@@ -15,25 +16,6 @@ try:
     use_numba = True
 except ImportError as err:
     sys.stderr.write("Error: failed to import module ({})".format(err))
-
-
-class ConditionalDecorator(object):
-    """ ConditionalDecorator allows conditional decoration at import time. It can
-    be used to turn off numba's LLVM jit optimizations if you're you don't want
-    them.
-    """
-    
-    __slots__ = {'__condition', '__decorator'}
-
-    def __init__(self, condition, decorator):
-        self.__condition = condition
-        self.__decorator = decorator
-
-    def __call__(self, func):
-        if not self.__condition:
-            return func
-        else:
-            return self.__decorator(func)
 
 
 COLOR_MIN = 0
