@@ -1,6 +1,6 @@
 # diodberg
 
-diodberg runs new experimental climbing wall from 'ikea-lisp-code. 
+diodberg runs new experimental climbing wall from 'ikea-lisp-code.
 
 If you are currently working on the wall, I recommend just checking out the
 repository directly and using classes through the directory hierarchy instead
@@ -54,6 +54,8 @@ Directory/package contents in python/diodberg/:
 * If simulating plugins: Pygame
 * If running serial protocols: pyserial and RPi
 * If running the web front end: Flask.
+* If using performance optimizations: Numba (and by extension, the Anaconda
+  Python distribution).
 
 
 # Installation and setup instructions

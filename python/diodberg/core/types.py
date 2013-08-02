@@ -3,14 +3,45 @@
 # some data safety.
 
 from collections import MutableMapping
-from collections import MutableSet
+import colorsys
 from copy import deepcopy
 import json
-import colorsys
 import random
-from diodberg.util.utils import random_location
 
 
+use_numba = False
+try:
+    from numba import autojit
+    use_numba = True
+except ImportError as err:
+    sys.stderr.write("Error: failed to import module ({})".format(err))
+
+
+class ConditionalDecorator(object):
+    """ ConditionalDecorator allows conditional decoration at import time. It can
+    be used to turn off numba's LLVM jit optimizations if you're you don't want
+    them.
+    """
+    
+    __slots__ = {'__condition', '__decorator'}
+
+    def __init__(self, condition, decorator):
+        self.__condition = condition
+        self.__decorator = decorator
+
+    def __call__(self, func):
+        if not self.__condition:
+            return func
+        else:
+            return self.__decorator(func)
+
+
+COLOR_MIN = 0
+COLOR_MAX = 255
+COLOR_HUE_MAX = 360
+
+
+@ConditionalDecorator(use_numba, autojit)
 class Color(object):
     """ Color representation, stored as RGB. Saturates for invalid values (FIX).
     """
@@ -19,20 +50,13 @@ class Color(object):
     __max = 255         # RGB max
     __hue_max = 360.    # Hue max
     
-    __slots__ = {'red', 'green', 'blue', 'alpha'}
-
+    # __slots__ = {'red', 'green', 'blue', 'alpha'}
+    
     def __init__(self, red = 0, green = 0, blue = 0, alpha = 0):
         self.red = red
         self.green = green
         self.blue = blue
         self.alpha = alpha
-        
-    @classmethod
-    def random_color(cls):
-        """ Returns a random Color.
-        """
-        r, g, b = [random.randint(0, 255) for i in range(3)]
-        return Color(r, g, b)
 
     @property
     def rgba(self):
@@ -44,9 +68,9 @@ class Color(object):
     def hsv(self):
         """ HSV tuple (not normalized).
         """
-        norm = float(Color.__max)
+        norm = float(COLOR_MAX)
         h, s, v = colorsys.rgb_to_hsv(self.red/norm, self.green/norm, self.blue/norm)
-        return (Color.__hue_max*h, s, v)
+        return (COLOR_HUE_MAX*h, s, v)
 
     def set_rgb(self, red, green, blue, alpha = 0):
         """ Set RGB convenience method.
@@ -59,18 +83,24 @@ class Color(object):
     def set_hsv(self, hue, saturation, value):
         """ Set HSV convenience method. Assumes that a max range of (360., 1., 1.).
         """ 
-        norm_hue = hue/Color.__hue_max
+        norm_hue = hue/COLOR_HUE_MAX
         red, green, blue = colorsys.hsv_to_rgb(norm_hue, saturation, value)
-        self.red = int(round(red*Color.__max))
-        self.green = int(round(green*Color.__max))
-        self.blue = int(round(blue*Color.__max))
-
+        self.red = int(round(red*COLOR_MAX))
+        self.green = int(round(green*COLOR_MAX))
+        self.blue = int(round(blue*COLOR_MAX))
+    
     def __repr__(self):
         val = (self.red, self.green, self.blue, self.alpha)
         formatted = "<Color (r = %0.3f, g = %0.3f, b = %0.3f, alpha = %0.3f)>"
         return formatted % val
 
 
+DMX_INVALID = -1
+DMX_LOWER = -1
+DMX_UPPER = -1
+
+
+@ConditionalDecorator(use_numba, autojit)
 class DMXAddress(object):
     """Defines the DMX address for a live pixel.
     """
@@ -78,14 +108,14 @@ class DMXAddress(object):
     __dmx_lower = 0
     __dmx_upper = 512
 
-    __slots__ = {'__universe', '__address'}
+    # __slots__ = {'__universe', '__address'}
     
     def __init__(self, universe = 0, address = 0):
         self.__universe = universe
         self.__address = address
 
     def is_valid(self): 
-        return self.__address is not DMXAddress.__invalid_address
+        return self.__address != DMX_INVALID
 
     def __get_universe(self): 
         return self.__universe
@@ -97,10 +127,10 @@ class DMXAddress(object):
     def __get_address(self): 
         return self.__address
     def __set_address(self, val):
-        if DMXAddress.__dmx_lower <= val <= DMXAddress.__dmx_upper:
+        if DMX_LOWER <= val <= DMX_UPPER:
             self.__address = val
         else:
-            self.__address = DMXAddress.__invalid_address
+            self.__address = DMX_INVALID
     def __del_address(self): 
         del self.__address
 
@@ -109,27 +139,28 @@ class DMXAddress(object):
 
     def __repr__(self):
         formatted = "<DMXAddress (universe = %0.3f, address = %0.3f)>"
-        return formatted % (self.universe, self.address)
+        return formatted % (self.__universe, self.__address)
     
 
+@ConditionalDecorator(use_numba, autojit)
 class Pixel(object):
     """ A pixel has a color and location and belong to a group. If it is live, it
     must have a valid DMX address.  
     TODO: Allow multiple route numbers?
     """
     
-    __slots__ = {'__color', '__address', '__live', '__group'}
+    # __slots__ = {'__color', '__address', '__live', '__group'}
     
     def __init__(self, 
-                 color = Color(), 
-                 address = DMXAddress(), 
+                 color = Color(0, 0, 0, 0),
+                 address = DMXAddress(0, 0), 
                  live = False, 
                  group = 0):
         self.__color = color
         self.__address = address
         self.__live = live
         self.__group = group
-        assert not live or (live and address.is_valid())
+        # assert not live or (live and address.is_valid())
         
     def __get_color(self): 
         return self.__color
@@ -166,9 +197,10 @@ class Pixel(object):
 
     def __repr__(self):
         return "".join(["<Pixel ", 
-                        str(self.color), ",", 
-                        "live = ", str(self.live), 
-                        "group = ", str(self.group), ">"])
+                        str(self.__color), ",", 
+                        str(self.__address), ",", 
+                        "live = ", str(self.__live), ",", 
+                        "group = ", str(self.__group), ">"])
 
 
 class Panel(MutableMapping):
@@ -199,7 +231,7 @@ class Panel(MutableMapping):
                     continue
                 location = (int(words[i_x]), int(words[i_y]))
                 address = DMXAddress(int(words[i_universe]), int(words[i_address]))
-                self.__pixels[location] = Pixel(Color(0, 0, 0), address, live = True)
+                self.__pixels[location] = Pixel(Color(0, 0, 0, 0), address, live = True)
                 i += 1
             f.close()
 
@@ -268,36 +300,6 @@ class Panel(MutableMapping):
         from diodberg.renderers.simulation_renderers import PyGameRenderer
         renderer = PyGameRenderer(debug = debug)
         renderer.render(self)
-
-    @classmethod
-    def random_panel(self, size = (640, 480), num_pixels = 200, live = False):
-        """ Returns a randomly populated panel, for simulation. 
-        TODO: merge blank_panel into this.
-        """
-        x, y = size 
-        assert x*y >= num_pixels, "Number of pixels exceed snumber of slots."
-        panel = Panel()
-        for i in xrange(num_pixels):
-            color = Color.random_color()
-            location = random_location(x, y)
-            address = DMXAddress(universe = 0, address = i)
-            panel[location] = Pixel(color, address, live)
-        return panel
-
-    @classmethod
-    def blank_panel(self, size = (7, 11)):
-        """ Returns a blank default panel with default dimensions 
-        sized to the climbing wall.
-        """ 
-        x, y = size
-        panel = Panel()
-        for i in xrange(x):
-            for j in xrange(y):
-                color = Color(0, 0, 0)
-                location = (i, j)
-                address = DMXAddress(universe = 0, address = 0)
-                panel[location] = Pixel(color, address, live = False)
-        return panel
     
     def __contains__(self, key):
         return key in self.__pixels
@@ -319,3 +321,51 @@ class Panel(MutableMapping):
 
     def __repr__(self):
         return "".join(["Panel<", str(self.__pixels), ">"])
+
+
+def random_color():
+    """ Returns a random Color.
+    """
+    r, g, b = [random.randint(0, 255) for i in range(3)]
+    return Color(r, g, b, 0)
+
+
+def random_location(x_upper_bound = 100, y_upper_bound = 100):
+    """ Returns a bounded, random Location.
+    """
+    assert x_upper_bound > 0 and y_upper_bound > 0
+    x = random.randint(0, x_upper_bound - 1)
+    y = random.randint(0, y_upper_bound - 1)
+    return (x, y)
+
+
+def random_panel(size = (640, 480), num_pixels = 200, live = False):
+    """ Returns a randomly populated panel, for simulation. 
+    TODO: merge blank_panel into this.
+    """
+    x, y = size 
+    assert x*y >= num_pixels, "Number of pixels exceed snumber of slots."
+    panel = Panel()
+    for i in xrange(num_pixels):
+        color = random_color()
+        location = random_location(x, y)
+        address = DMXAddress(0, i)
+        group = 0
+        pixel = Pixel(color, address, live, group)
+        panel[location] = pixel
+    return panel
+
+
+def blank_panel(self, size = (7, 11)):
+    """ Returns a blank default panel with default dimensions 
+    sized to the climbing wall.
+    """ 
+    x, y = size
+    panel = Panel()
+    for i in xrange(x):
+        for j in xrange(y):
+            color = Color(0, 0, 0, 0)
+            location = (i, j)
+            address = DMXAddress(0, 0)
+            panel[location] = Pixel(color, address, live = False)
+    return panel

@@ -9,8 +9,8 @@ class PyGameRenderer(Renderer):
     Active (inactive) pixels are rendered as circles (squares).
     """
 
-    __black = Color(0, 0, 0).rgba
-    __font_color = Color(255, 255, 0).rgba
+    __black = Color(0, 0, 0, 0).rgba
+    __font_color = Color(255, 255, 0, 0).rgba
     __font_size = 10
     __default_font = "monospace"
     
@@ -124,10 +124,10 @@ def simulation_main():
     """ Runs a simulation test routine for watching examples. 
     """
     from diodberg.core.runner import Controller
-    from diodberg.core.types import Panel
+    from diodberg.core.types import random_panel
     from diodberg.user_plugins.examples import CycleHue
-    from diodberg.renderers.simulation_renderers import PyGameRenderer
-    panel = Panel.random_panel()
+    from diodberg.renderers.simulation_renderers import PyGameRenderer    
+    panel = random_panel()
     renderer = PyGameRenderer(debug = True)
     runner = CycleHue(panel, renderer)
     controller = Controller(panel, renderer)
@@ -138,12 +138,13 @@ def test_curses():
     """ Tests the curses-based simulation.
     """ 
     import time
-    from diodberg.core.types import Panel
+    from diodberg.core.types import blank_panel
     from diodberg.core.types import Color
+    from diodberg.core.types import random_color
     from diodberg.renderers.simulation_renderers import CursesRenderer
-    panel = Panel.blank_panel()
+    panel = blank_panel()
     for loc, pixel in panel.iteritems():
-        pixel.color = Color.random_color()
+        pixel.color = random_color()
     renderer = CursesRenderer(debug = True)
     render.render(panel)
     time.sleep(100)
