@@ -5,6 +5,7 @@
 from collections import MutableMapping
 from collections import MutableSet
 from copy import deepcopy
+import json
 import colorsys
 import random
 from diodberg.util.utils import random_location
@@ -112,21 +113,23 @@ class DMXAddress(object):
     
 
 class Pixel(object):
-    """ A pixel has a color and location. If it is live, it must have a valid
-    DMX address.
-    TODO: Should this store the route number?
+    """ A pixel has a color and location and belong to a group. If it is live, it
+    must have a valid DMX address.  
+    TODO: Allow multiple route numbers?
     """
     
-    __slots__ = {'__color', '__address', '__live'}
+    __slots__ = {'__color', '__address', '__live', '__group'}
     
     def __init__(self, 
                  color = Color(), 
                  address = DMXAddress(), 
-                 live = False):
+                 live = False, 
+                 group = 0):
         self.__color = color
         self.__address = address
         self.__live = live
-        assert not live or (live and address.is_valid())            
+        self.__group = group
+        assert not live or (live and address.is_valid())
         
     def __get_color(self): 
         return self.__color
@@ -149,99 +152,23 @@ class Pixel(object):
     def __del_live(self): 
         del self.__live
 
+    def __get_group(self): 
+        return self.__group
+    def __set_group(self, val): 
+        self.__group = val
+    def __del_group(self): 
+        del self.__group
+
     color = property(__get_color, __set_color, __del_color, "RGB color.")
     address = property(__get_address, __set_address, __del_address, "DMX address.")
     live = property(__get_live, __set_live, __del_live, "Is live pixel?")
+    group = property(__get_group, __set_group, __del_group, "Is the pixel part of a group?")
 
     def __repr__(self):
         return "".join(["<Pixel ", 
                         str(self.color), ",", 
-                        "live = ", str(self.live), ">"])
-
-
-class Group(MutableSet):
-    """ A natural grouping of pixels (e.g., for specifying a route).
-    """ 
-    
-    __slots__ = {'__pixels', '__name'}
-
-    def __init__(self, name = "default", filename = None, group = None):
-        self.__pixels = set()
-        self.name = name
-        if group is not None:
-            self.__pixels = deepcopy(group.__pixels)
-            self.__name = deepcopy(group.__name)
-        elif filename is not None:
-            f = open(filename, 'r')
-            size = 2
-            i_x, i_y = range(size)
-            i = 0
-            for line in f:
-                words = line.split()
-                assert len(words) is size, "Invalid number of elements. Line: " + i
-                location = (words[i_x], words[i_y])
-                self.add(location)
-                i += 1
-            f.close()
-    
-    @property
-    def locations(self):
-        return list(self.__pixels)
-
-    def show(self, debug = True):
-        """ Convenience method for viewing group.
-        """ 
-        from diodberg.renderers.simulation_renderers import PyGameRenderer
-        renderer = PyGameRenderer(debug = debug)
-        renderer.render(self)
-
-    def write(self, filename):
-        """ Writes a panel to a file-specification. 
-        A line in the file spec corresponds to a pixel:
-            <x location> <y location>
-        """ 
-        f = open(filename, 'w')
-        for loc, pixel in self.iteritems():
-            x, y = loc
-            print "".join([x, y], " ")
-        f.close()
-        
-    def iteritems(self):
-        """ Compatibility method for panel rendering API.
-        """ 
-        iterator = iter(self.__pixels)
-        red = Color(255, 0, 0)
-        yield (iterator.next(), Pixel(color = red))
-
-    def add(self, val):
-        self.__pixels.add(val)
-
-    def discard(self, val):
-        self.__pixels.discard(val)
-
-    def __contains__(self, key):
-        return key in self.__pixels
-
-    def __len__(self):
-        return len(self.__pixels)
-
-    def __iter__(self):
-        return iter(self.__pixels)    
-
-    def __get_name(self): 
-        return self.__name
-    def __set_name(self, val): 
-        self.__name = val
-    def __del_name(self): 
-        del self.__name
-
-    name = property(__get_name, __set_name, __del_name, "Route name/ID.")
-    
-    def __repr__(self):
-        return "".join(["Group<name = ", 
-                        self.__name, ", ", 
-                        str(self.__pixels), 
-                        ">"])
+                        "live = ", str(self.live), 
+                        "group = ", str(self.group), ">"])
 
 
 class Panel(MutableMapping):
@@ -249,20 +176,16 @@ class Panel(MutableMapping):
     is currently structured as a dictionary keyed by (x, y) and can be
     constructed from a file specification or copy-constructed from another
     panel.
-
     TODO: Replace with a numpy matrix.
-
     """
     
     __base_group = 0
-    __slots__ = {'__pixels', '__groups'}
+    __slots__ = {'__pixels'}
 
     def __init__(self, panel = None, filename = None, panel_id = 0):
         self.__pixels = dict()
-        self.__groups = dict()
         if panel is not None:
             self.__pixels = deepcopy(panel.__pixels)
-            self.__groups = deepcopy(panel.groups)
         elif filename is not None:
             f = open(filename, 'r')
             size = 6

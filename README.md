@@ -13,6 +13,10 @@ Directory/package contents in python/diodberg/:
   the wall by directly manipulating pixels on a Panel through an iterator
   interface. This is a strong candidate for future performance improvements.
 
+* data 
+  
+  Sample configuration files. 
+
 * input
   
   Nothing here! Currently, we lack both software and hardware support for

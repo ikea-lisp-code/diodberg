@@ -14,17 +14,8 @@ def random_location(x_upper_bound = 100, y_upper_bound = 100):
 
 def read_file(filename):
     """ Reads a file containing a specification of (possible multiple) panels. 
-    Each line in the file spec corresponds to a pixel:
-        <dmx universe> <dmx address> <x location> <y location> <panel id> <group id>
-    For example:
-
+    TODO: Being changed to a JSON representation.
     """ 
+    assert 0, "Not implemented yet."
     panels = dict()
-    
     return panels
-
-def discover_panel():
-    """ Discovers the active pixels in a climbing wall.
-    """ 
-    # TODO: Implement
-    assert 0, "Not implemented yet. Use RDM?"
