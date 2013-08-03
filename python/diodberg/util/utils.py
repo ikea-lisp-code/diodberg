@@ -3,7 +3,7 @@
 
 class ConditionalDecorator(object):
     """ ConditionalDecorator allows conditional decoration at import time. It can
-    be used to turn off numba's LLVM jit optimizations if you're you don't want
+    be used to turn off numba's LLVM jit optimizations if you're you not using 
     them.
     """
     
