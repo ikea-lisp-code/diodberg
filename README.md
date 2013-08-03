@@ -55,7 +55,8 @@ Directory/package contents in python/diodberg/:
 * If running serial protocols: pyserial and RPi
 * If running the web front end: Flask.
 * If using performance optimizations: Numba (and by extension, the Anaconda
-  Python distribution).
+  Python distribution). 
+* If using audio input: aubio (and its many dependencies).
 
 
 # Installation and setup instructions
