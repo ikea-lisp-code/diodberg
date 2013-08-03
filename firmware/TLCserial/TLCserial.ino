@@ -79,12 +79,10 @@ void setup()
   delay(500);
   
   // Get the preset dmx address from DIP switch
-  uint8_t dip_value = PINC & 0x0F;
-  dmx_address = (dip_value >> 3) + ((dip_value >> 1) & 0x02) +
-      ((dip_value << 1) & 0x04) + ((dip_value << 3) & 0x08);
+  dmx_address = PINC & 0x0F;
   dmx_address = dmx_address ^ 0x0F;
   // Check for demo mode.
-  if (dmx_address == 0x0F) {
+  if (dmx_address > 10) {
     demo_mode = true;
   }
   
@@ -108,39 +106,50 @@ void loop()
 }
 
 void demo_mode_lights() {
+  uint16_t bright = 1024;
+  uint16_t del = 100;
+  
+  if (dmx_address == 0x0E) {
+    for (uint_fast16_t i = 0; i < 48; i++) {
+       Tlc.set(i, bright);
+     }
+     Tlc.update();
+     return;
+  }
+  
   for (int i = 0; i < 9; i++) {
-    Tlc.set(i*3, 4095);
+    Tlc.set(i*3, bright);
   }
   Tlc.update();
-  delay(500);
+  delay(del);
   
   for (int i = 0; i < 9; i++) {
     Tlc.set(i*3+2, 0);
   }
   Tlc.update();
-  delay(500);
+  delay(del);
   
   for (int i = 0; i < 9; i++) {
-    Tlc.set(i*3+1, 4095);
+    Tlc.set(i*3+1, bright);
   }
   Tlc.update();
-  delay(500);
+  delay(del);
   
   for (int i = 0; i < 9; i++) {
     Tlc.set(i*3, 0);
   }
   Tlc.update();
-  delay(500);
+  delay(del);
   
   for (int i = 0; i < 9; i++) {
-    Tlc.set(i*3+2, 4095);
+    Tlc.set(i*3+2, bright);
   }
   Tlc.update();
-  delay(500);
+  delay(del);
   
   for (int i = 0; i < 9; i++) {
     Tlc.set(i*3+1, 0);
   }
   Tlc.update();
-  delay(500);
+  delay(del);
 }

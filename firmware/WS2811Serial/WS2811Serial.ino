@@ -51,12 +51,16 @@ void setup() {
   dmx_address = (PIND >> 5) + ((PINB & 1) << 3);
   dmx_address = dmx_address ^ 0x0F;
   // Check for demo mode
-  if (dmx_address == 0x0F) {
+  if (dmx_address > 10) {
     demo_mode = true;
   }
+  
+  // Turn the LEDs on!
+  pinMode(5,OUTPUT);
+  digitalWrite(5,LOW);
 }
 
-void loop() {
+void loop() {  
   if (!demo_mode) {
     for (uint_fast16_t c = 0; c < NUM_LEDS; c++) {
         uint_fast16_t start = dmx_address*(NUM_LEDS*3) + c*3;
@@ -64,9 +68,33 @@ void loop() {
     }
   }
   else {
-     rainbow(50);
+     demo_mode_lights();
   }
 }
+
+void demo_mode_lights() {
+  uint8_t del = 100;
+  uint8_t bright = 128;
+   
+  if (dmx_address == 0x0F) {
+    rainbow(50);
+    return;
+  }
+  else if (dmx_address == 0x0E) {
+    for (uint_fast16_t i = 0; i < NUM_LEDS; i++) {
+       setPixelColor(i, strip.Color(bright,bright,bright));
+    }
+    return;
+  }
+  else {
+    color_switch(del, bright);
+    return;
+  }
+}
+
+// ---------------------------------------------------------------
+// Pixel Control Functions
+// ---------------------------------------------------------------
 
 void setPixelColor(uint8_t pixel, uint32_t color) {
   // Change muxes to appropriate output
@@ -81,11 +109,30 @@ void setDualPixelColor(uint8_t pixel, uint32_t color1, uint32_t color2) {
   strip.show();
 }
 
+// ---------------------------------------------------------------
+// Animation Functions
+// --------------------------------------------------------------
+
 // Fill the dots one after the other with a color
 void colorWipe(uint32_t c, uint8_t wait) {
   for(uint16_t i=0; i<NUM_LEDS; i++) {
       setPixelColor(i, c);
       delay(wait);
+  }
+}
+
+void color_switch(uint8_t del, uint8_t bright) {
+  uint32_t colors[] = {
+    strip.Color(bright, 0, 0),
+    strip.Color(bright, bright, 0),
+    strip.Color(0, bright, 0),
+    strip.Color(0, bright, bright),
+    strip.Color(0, 0, bright),
+    strip.Color(bright, 0, bright)
+  };
+  
+  for (uint8_t i = 0; i < (sizeof(colors)/sizeof(colors[0])); i++) {
+    colorWipe(colors[i], del);
   }
 }
 
