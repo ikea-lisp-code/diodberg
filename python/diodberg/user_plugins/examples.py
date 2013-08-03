@@ -6,6 +6,7 @@
 
 from diodberg.core.runner import Runner
 from diodberg.core.types import Color
+from diodberg.core.types import random_color
 
 
 class ToggleColors(Runner):
@@ -20,7 +21,7 @@ class ToggleColors(Runner):
 
     def fill(self):
         for loc, pixel in self.panel.iteritems():
-            r, g, b, alpha = Color.random_color().rgba
+            r, g, b, alpha = random_color().rgba
             pixel.color.set_rgb(r, g, b)
 
     def __repr__(self):
@@ -50,7 +51,7 @@ class CycleHue(Runner):
 def simulation_main():
     """ Runs a simulation test routine for watching examples. """
     from diodberg.core.runner import Controller
-    from diodberg.util.utils import random_panel
+    from diodberg.core.types import random_panel
     from diodberg.renderers.simulation_renderers import PyGameRenderer
     panel = random_panel()
     renderer = PyGameRenderer(debug = True)
