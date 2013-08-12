@@ -2,6 +2,9 @@
 
 diodberg runs new experimental climbing wall from 'ikea-lisp-code.
 
+This repository is current **DEPRECATED**. Development on the wall has moved to
+a fork of [Firemix] (https://github.com/ikea-lisp-code/firemix).
+
 If you are currently working on the wall, I recommend just checking out the
 repository directly and using classes through the directory hierarchy instead
 of using the setup.py file.
