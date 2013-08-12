@@ -50,8 +50,11 @@
     Alex Leone <acleone ~AT~ gmail.com>, 2009-02-03 */
 
 #include "Tlc5940.h"
+#define NUM_LEDS 16
 
 static int bright[3] = {0, 1224, 2650};
+boolean demo_mode = false;
+uint_fast16_t dmx_address;
 
 void setup()
 {
@@ -59,6 +62,11 @@ void setup()
      You can optionally pass an initial PWM value (0 - 4095) for all channels.*/
   Tlc.init();
   Tlc.set(0, 4095);
+  Tlc.update();
+  delay(500);
+  
+  // Configure the DIP switch pins to have pullups
+  PORTC |= (1 << 0) + (1 << 1) + (1 << 2) + (1 << 3);
   
   // Set the differential transceiver to receive mode.
   digitalWrite(2, LOW);
@@ -67,22 +75,81 @@ void setup()
   // Setup the DMX interrupts / parsing code.
   DMXSerial.init(DMXReceiver);
   Tlc.set(1, 4095);
+  Tlc.update();
+  delay(500);
+  
+  // Get the preset dmx address from DIP switch
+  dmx_address = PINC & 0x0F;
+  dmx_address = dmx_address ^ 0x0F;
+  // Check for demo mode.
+  if (dmx_address > 10) {
+    demo_mode = true;
+  }
   
   // Chill out.
   delay(500);
   Tlc.set(2, 4095);
-}
-
-/* This loop will create a Knight Rider-like effect if you have LEDs plugged
-   into all the TLC outputs.  NUM_TLCS is defined in "tlc_config.h" in the
-   library folder.  After editing tlc_config.h for your setup, delete the
-   Tlc5940.o file to save the changes. */
-
-void loop()
-{
-  for (int i = 0; i < 48; i++) {
-    Tlc.set(i, DMXSerial.read(i+1) << 4);
-  }
   Tlc.update();
 }
 
+void loop()
+{
+   if (!demo_mode) {
+     for (uint_fast16_t i = 0; i < 48; i++) {
+       Tlc.set(i, DMXSerial.read(i + 1 + dmx_address*NUM_LEDS*3) << 4);
+     }
+
+   }
+   else {
+     demo_mode_lights();
+   }
+}
+
+void demo_mode_lights() {
+  uint16_t bright = 1024;
+  uint16_t del = 100;
+  
+  if (dmx_address == 0x0E) {
+    for (uint_fast16_t i = 0; i < 48; i++) {
+       Tlc.set(i, bright);
+     }
+     Tlc.update();
+     return;
+  }
+  
+  for (int i = 0; i < 9; i++) {
+    Tlc.set(i*3, bright);
+  }
+  Tlc.update();
+  delay(del);
+  
+  for (int i = 0; i < 9; i++) {
+    Tlc.set(i*3+2, 0);
+  }
+  Tlc.update();
+  delay(del);
+  
+  for (int i = 0; i < 9; i++) {
+    Tlc.set(i*3+1, bright);
+  }
+  Tlc.update();
+  delay(del);
+  
+  for (int i = 0; i < 9; i++) {
+    Tlc.set(i*3, 0);
+  }
+  Tlc.update();
+  delay(del);
+  
+  for (int i = 0; i < 9; i++) {
+    Tlc.set(i*3+2, bright);
+  }
+  Tlc.update();
+  delay(del);
+  
+  for (int i = 0; i < 9; i++) {
+    Tlc.set(i*3+1, 0);
+  }
+  Tlc.update();
+  delay(del);
+}
