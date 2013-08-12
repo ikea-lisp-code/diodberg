@@ -6,16 +6,17 @@ from collections import MutableMapping
 import colorsys
 from copy import deepcopy
 import json
+import numpy as np
 import random
-from diodberg.util.utils import ConditionalDecorator
-
 
 use_numba = False
 try:
-    from numba import autojit
+    from numba import autojit    
     use_numba = True
 except ImportError as err:
     sys.stderr.write("Error: failed to import module ({})".format(err))
+
+from diodberg.util.utils import ConditionalDecorator
 
 
 COLOR_MIN = 0
@@ -185,7 +186,7 @@ class Pixel(object):
                         "group = ", str(self.__group), ">"])
 
 
-class Panel(MutableMapping):
+class Panel(object):
     """ Panel represents a collection of pixels, representing a climbing wall. It
     is currently structured as a dictionary keyed by (x, y) and can be
     constructed from a file specification or copy-constructed from another
@@ -194,28 +195,22 @@ class Panel(MutableMapping):
     """
     
     __base_group = 0
-    __slots__ = {'__pixels'}
+    __slots__ = {'__dim', '__pixels'}
 
-    def __init__(self, panel = None, filename = None, panel_id = 0):
-        self.__pixels = dict()
+    def __init__(self, size = (1, 1), panel = None, filename = None, panel_id = 0):
+        self.__dim = size
+        x, y = self.__dim
+        color = Color(0, 0, 0, 0)
+        address = DMXAddress(0, 0)
+        live = False
+        group = 0
+        alloc = [[Pixel(color, address, live, group) for i in xrange(x)] for j in xrange(y)]
+        self.__pixels = np.matrix(alloc, dtype = object).transpose()
         if panel is not None:
-            self.__pixels = deepcopy(panel.__pixels)
+            assert False, "TODO: Add custom copy"
+            # self.__pixels = deepcopy(panel.__pixels)
         elif filename is not None:
-            f = open(filename, 'r')
-            size = 6
-            i_universe, i_address, i_x, i_y, index, route = range(size)
-            i = 0
-            for line in f:
-                words = line.split()
-                assert len(words) is size, \
-                    "Invalid number of elements. Line: " + i
-                if words[index] is not panel_index:
-                    continue
-                location = (int(words[i_x]), int(words[i_y]))
-                address = DMXAddress(int(words[i_universe]), int(words[i_address]))
-                self.__pixels[location] = Pixel(Color(0, 0, 0, 0), address, live = True)
-                i += 1
-            f.close()
+            assert False, "TODO: Replace with json decoder."
 
     @property
     def locations(self):
@@ -242,49 +237,40 @@ class Panel(MutableMapping):
     def width(self):
         """ Returns the (horizontal) panel width.
         """ 
-        temp = self.__pixels.items()
-        temp.sort(key = lambda x: x[0][0])
-        return temp[len(temp) - 1][0][0] + 1
+        x, y = self.__dim
+        return x
 
     @property
     def height(self):
         """ Returns the (vertical) panel height.
         """ 
-        temp = self.__pixels.items()
-        temp.sort(key = lambda x: x[0][1])
-        return temp[len(temp) - 1][0][1] + 1
+        x, y = self.__dim
+        return y
 
-    @property
-    def groups(self):
-        """ Returns dictionary of groups for the panel, keyed by group name.
-        """ 
-        return self.__groups
+    @property 
+    def raw(self):
+        return self.__panel
 
     def write(self, filename, panel_id):
-        """ Writes a panel to a file-specification. 
-        A line in the file spec corresponds to a pixel:
-            <dmx universe> <dmx address> <x location> <y location> <panel id> <group id>
-        For example:
-            0 0 10 3 1 0
-            0 2 10 2 1 1
-        """ 
-        f = open(filename, 'w')
-        for loc, pixel in self.iteritems():
-            universe = pixel.address.universe
-            address = pixel.address.address
-            x, y = loc
-            print "".join([universe, address, x, y], " ")
-        f.close()
+        assert False, "TODO: Replace with json decoder."
 
     def show(self, debug = True):
         """ Convenience method for viewing panel.
         """ 
         from diodberg.renderers.simulation_renderers import PyGameRenderer
         renderer = PyGameRenderer(debug = debug)
-        renderer.render(self)
+        while True:
+            try:
+                renderer.render(self)
+            except KeyboardInterrupt:
+                print "\nQuiting!"
+                exit()
     
     def __contains__(self, key):
-        return key in self.__pixels
+        try:
+            return self.__pixels[key] is not None
+        except IndexError:
+            return False
 
     def __getitem__(self, key):
         return self.__pixels[key]
@@ -323,31 +309,15 @@ def random_location(x_upper_bound = 100, y_upper_bound = 100):
 
 def random_panel(size = (640, 480), num_pixels = 200, live = False):
     """ Returns a randomly populated panel, for simulation. 
-    TODO: merge blank_panel into this.
     """
     x, y = size 
     assert x*y >= num_pixels, "Number of pixels exceed snumber of slots."
-    panel = Panel()
+    panel = Panel(size)
     for i in xrange(num_pixels):
         color = random_color()
         location = random_location(x, y)
         address = DMXAddress(0, i)
         group = 0
-        pixel = Pixel(color, address, live, group)
-        panel[location] = pixel
-    return panel
-
-
-def blank_panel(self, size = (7, 11)):
-    """ Returns a blank default panel with default dimensions 
-    sized to the climbing wall.
-    """ 
-    x, y = size
-    panel = Panel()
-    for i in xrange(x):
-        for j in xrange(y):
-            color = Color(0, 0, 0, 0)
-            location = (i, j)
-            address = DMXAddress(0, 0)
-            panel[location] = Pixel(color, address, live = False)
+        live = True
+        panel[location] = Pixel(color, address, live, group)
     return panel

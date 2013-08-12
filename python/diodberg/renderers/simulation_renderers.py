@@ -1,5 +1,5 @@
-import pygame
 import curses
+import pygame
 from diodberg.core.renderer import Renderer
 from diodberg.core.types import Color
 
@@ -33,22 +33,26 @@ class PyGameRenderer(Renderer):
     def render(self, panel):
         self.__screen.fill(PyGameRenderer.__black)
         width = self.__scale
-        for loc, pixel in panel.iteritems():
-            if pixel.live:
-                pygame.draw.circle(self.__screen, pixel.color.rgba, loc, width)
-            else:
-                x, y = loc
-                rect = pygame.Rect(x - width, y + width, width, width)
-                pygame.draw.rect(self.__screen, pixel.color.rgba, rect, width)
-            # Print DMX address info in addition to color.
-            if self.__debug:
-                universe = pixel.address.universe
-                address = pixel.address.address
-                info = (universe, address)
-                label = self.__font.render(str(info), 
-                                           True,
-                                           PyGameRenderer.__font_color)
-                self.__screen.blit(label, loc)
+        for i in xrange(panel.width):
+            for j in xrange(panel.height):
+                loc = (i, j)
+                pixel = panel[loc]
+                loc = (20*i, 20*j)
+                if pixel.live:
+                    pygame.draw.circle(self.__screen, pixel.color.rgba, loc, width)
+                else:
+                    x, y = loc
+                    rect = pygame.Rect(x - width, y + width, width, width)
+                    pygame.draw.rect(self.__screen, pixel.color.rgba, rect, width)
+                    # Print DMX address info in addition to color.
+                if self.__debug:
+                    universe = pixel.address.universe
+                    address = pixel.address.address
+                    info = (universe, address)
+                    label = self.__font.render(str(info), 
+                                               True,
+                                               PyGameRenderer.__font_color)
+                    self.__screen.blit(label, loc)
         pygame.display.update()
 
     def __repr__(self):
@@ -138,11 +142,11 @@ def test_curses():
     """ Tests the curses-based simulation.
     """ 
     import time
-    from diodberg.core.types import blank_panel
     from diodberg.core.types import Color
+    from diodberg.core.types import Panel
     from diodberg.core.types import random_color
     from diodberg.renderers.simulation_renderers import CursesRenderer
-    panel = blank_panel()
+    panel = Panel((10, 10))
     for loc, pixel in panel.iteritems():
         pixel.color = random_color()
     renderer = CursesRenderer(debug = True)

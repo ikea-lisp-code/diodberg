@@ -2,15 +2,23 @@ import time
 import threading
 
 
+use_yappi = False
+try:
+    import yappi
+except ImportError as err:
+    sys.stderr.write("Error: failed to import module ({})".format(err))
+
+
 class Runner(threading.Thread):
     """ A Runner is the primary execution thread for a Panel visualization. An
     abstract class, it takes a Panel of pixels and a Renderer and executes 
     a rendering action for that panel.
     """ 
 
-    __slots__ = {'__lock', '__panel', '__name', '__renderer', '__sleepS'}
+    __slots__ = {'__lock', '__panel', '__name', 
+                 '__renderer', '__sleepS', '__profile'}
     
-    def __init__(self, panel, name, renderer, sleep):
+    def __init__(self, panel, name, renderer, sleep, profile = False):
         super(Runner, self).__init__()
         self.daemon = True
         self.running = False
@@ -19,6 +27,15 @@ class Runner(threading.Thread):
         self.__name = name
         self.__renderer = renderer
         self.__sleepS = sleep
+        self.__profile = profile
+        if self.__profile and use_yappi:
+            yappi.start()
+
+    def __del__(self):
+        if self.__profile and use_yappi:
+            yappi.print_stats(sort_type = yappi.SORTTYPE_TSUB, 
+                              limit = 15, 
+                              thread_stats_on = False)
 
     def init(self):
         """ Initializes any environmental parameters based on the panel info.
@@ -93,4 +110,4 @@ class Controller(object):
             runner.running = False
         finally:
             print "\nQuiting!"
-            exit()        
+            exit()
